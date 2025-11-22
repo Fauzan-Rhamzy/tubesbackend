@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Booking Ruangan</title>
+    <link rel="stylesheet" href="css/bookingDetail/style.css">
+    <script src="js/bookingDetail/slideshow.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Form Booking Ruangan</h1>
+            <p>Isi detail booking untuk melakukan pemesanan ruangan</p>
+        </div>
+
+        <div class="room-image slideshow-container">
+            <div class="slide fade">
+                <img src="images/ruang a/194_1510807301.67.lg.png">
+            </div>
+
+            <div class="slide fade">
+                <img src="images/ruang a/meja miting kantor ELSINTA revisi copy.jpg">
+            </div>
+
+            <div class="slide fade">
+                <img src="images/ruang a/Meeting-Room-GST.webp">
+            </div>
+
+            <div class="dots">
+                <span class="dot" onclick="currentSlide(1)"></span>
+                <span class="dot" onclick="currentSlide(2)"></span>
+                <span class="dot" onclick="currentSlide(3)"></span>
+            </div>
+        </div>
+
+        <div class="room-info">
+            <div>
+                <span class="room-name">Ruangan Pilihan: Meeting Room A</span>
+                <span class="room-capacity">Kapasitas: 10 orang</span>
+            </div>
+            <div class="room-status">
+                <p>Tersedia</p>
+            </div>
+        </div>
+
+        <form id="bookingForm">
+            <div class="info-box">
+                <p>Pastikan Anda memilih tanggal dan waktu yang tersedia. Booking akan dikonfirmasi oleh admin.</p>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="bookingDate">TanggalBooking *</label>
+                    <input type="date" id="bookingDate" required>
+                    <!-- error message jika user belum memilih tanggal booking-->
+                    <span class="error-message">Pilih tanggal booking</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="bookingTime">Waktu mulai *</label>
+                    <input type="time" id="bookingTime" name="bookingTime" required>
+                    <!-- error message jika user belum memilih waktu mulai-->
+                    <span class="error-message">Pilih waktu mulai</span>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="duration">Durasi booking (jam)*</label>
+                    <select id="duration" name="duration" required>
+                        <option value="">--Pilih Durasi--</option>
+                        <option value="1">1 jam</option>
+                        <option value="2">2 jam</option>
+                        <option value="3">3 jam</option>
+                        <option value="4">4 jam</option>
+                        <option value="5">5 jam</option>
+                        <option value="6">6 jam</option>
+                        <option value="7">7 jam</option>
+                        <option value="8">8 jam</option>
+                    </select>
+                    <!-- error message jika user belum memilih durasi booking-->
+                    <span class="error-message">Pilih durasi booking</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="participants">Jumlah Peserta *</label>
+                    <input type="text" id="participants" name="participants" placeholder="Contoh: 5" required>
+                    <!-- error message jika user belum memasukkan jumlah peserta-->
+                    <span class="error-message">Masukkan jumlah peserta yang valid</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="purpose">Tujuan penggunaan *</label>
+                <textarea id="purpose" name="purpose" placeholder="Jelaskan tujuan penggunaan ruangan"></textarea>
+                <!-- error message jika user belum memasukkan tujuan penggunaan-->
+                <span class="error-message">Masukkan tujuan penggunaan</span>
+            </div>
+
+            <div class="form-group">
+                <label for="specialRequest">Permintaan Khusus</label>
+                <textarea id="specialRequest" name="specialRequest"
+                    placeholder="Projector, whiteboard, dll (opsional)"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="contactPhone">Nomor Telepon Kontak *</label>
+                <input type="text" id="contactPhone" name="contactPhone" placeholder="Contoh: 08xxxxxxxxxx" required>
+                <span class="error-message">Masukkan nomor telepon yang valid</span>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn-cancel">Batal</button>
+                <button type="button" class="btn-submit">Lanjutkan Booking</button>
+            </div>
+        </form>
+    </div>
+</body>
+
+</html>
