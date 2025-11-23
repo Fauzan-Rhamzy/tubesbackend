@@ -30,16 +30,12 @@ function handleSubmit(event) {
     const bookingDate = document.getElementById('bookingDate');
     const duration = document.getElementById('duration');
     const purpose = document.getElementById('purpose');
-    const email = document.getElementById('email');
-    const contactPhone = document.getElementById('contactPhone');
 
     let isValid = true;
 
     isValid &= validateInput(bookingDate);
     isValid &= validateInput(duration);
     isValid &= validateInput(purpose);
-    isValid &= validateInput(email);
-    isValid &= validateInput(contactPhone);
 
     isValid = Boolean(isValid);
 
@@ -49,16 +45,15 @@ function handleSubmit(event) {
     }
 
     alert("Booking berhasil! Data siap dikirim ke server.");
-    location.reload();
+    window.location.href = "history.html";
+
 }
 
 function setupLiveValidation() {
     const inputs = [
         "bookingDate",
         "duration",
-        "purpose",
-        "email",
-        "contactPhone"
+        "purpose"
     ];
 
     inputs.forEach(id => {
@@ -84,4 +79,12 @@ document.addEventListener("DOMContentLoaded", () => {
         const today = new Date().toISOString().split("T")[0];
         bookingDate.setAttribute("min", today);
     }
+
+    const cancelBtn = document.querySelector(".btn-cancel");
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", () => {
+            window.location.href = "dashboard.html";
+        });
+    }
+
 });
