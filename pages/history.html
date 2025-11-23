@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riwayat Booking Ruangan</title>
+
+    <!-- Sinkron style -->
+    <link rel="stylesheet" href="../css/history.css">
+
+    <!-- Ikon wajib 2 gambar -->
+    <link rel="icon" href="../images/icons/calendar.png">
+    <script src="../js/history.js"></script>
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="header-left">
+            <img id="app-logo" src="../images/logo.png" alt="Logo Aplikasi">
+        </div>
+
+        <nav class="header-nav">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="history.html" class="nav-link">History</a>
+        </nav>
+        
+        <div class="header-right">
+            <span id="usernameDisplay">Hi, User!</span>
+            <a href="login.html" id="logoutButton" class="nav-link logout"><img id="logout_icon" src="../images/logout_icon.png" alt=""></a>
+        </div>
+    </header>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>Riwayat Booking</h1>
+        </div>
+
+        <!-- Container list history -->
+        <div id="historyList" class="history-list">
+            <!-- Card booking muncul dari JS -->
+        </div>
+
+    </div>
+
+    <script src="../js/history/script.js"></script>
+</body>
+
+</html>
