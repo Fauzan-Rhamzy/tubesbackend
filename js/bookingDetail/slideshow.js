@@ -1,7 +1,6 @@
-var slideIndex = 0;
-var slideTimer;
+var slideIndex = 0; //menyimpan index slide
+var slideTimer;  //timer waktu untuk slide show
 
-// Inisialisasi slideshow
 function initSlideshow() {
     const slides = document.getElementsByClassName("slide");
     if (slides.length > 0) {
@@ -28,8 +27,8 @@ function showSlides() {
         dots[i].classList.remove("active-dot");
     }
 
-    // Increment slide index
     slideIndex++;
+
     if (slideIndex > slides.length) {
         slideIndex = 1;
     }

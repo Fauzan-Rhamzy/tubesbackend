@@ -7,6 +7,7 @@
     <title>Form Booking Ruangan</title>
     <link rel="stylesheet" href="css/bookingDetail/style.css">
     <script src="js/bookingDetail/slideshow.js"></script>
+    <script src="js/bookingDetail/script.js"></script>
 </head>
 
 <body>
@@ -47,6 +48,7 @@
         </div>
 
         <form id="bookingForm">
+            <input type="hidden" id="roomId" name="roomId" value="1">
             <div class="info-box">
                 <p>Pastikan Anda memilih tanggal dan waktu yang tersedia. Booking akan dikonfirmasi oleh admin.</p>
             </div>
@@ -60,39 +62,18 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="bookingTime">Waktu mulai *</label>
-                    <input type="time" id="bookingTime" name="bookingTime" required>
-                    <!-- error message jika user belum memilih waktu mulai-->
-                    <span class="error-message">Pilih waktu mulai</span>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="duration">Durasi booking (jam)*</label>
+                    <label for="duration">Jam Booking*</label>
                     <select id="duration" name="duration" required>
-                        <option value="">--Pilih Durasi--</option>
-                        <option value="1">1 jam</option>
-                        <option value="2">2 jam</option>
-                        <option value="3">3 jam</option>
-                        <option value="4">4 jam</option>
-                        <option value="5">5 jam</option>
-                        <option value="6">6 jam</option>
-                        <option value="7">7 jam</option>
-                        <option value="8">8 jam</option>
+                        <option value="">--Pilih Jam Booking--</option>
+                        <option value="1">08.00 - 11.00</option>
+                        <option value="2">11.00 - 13.00</option>
+                        <option value="3">13.00 - 15.00</option>
+                        <option value="4">15.00 - 18.00</option>
                     </select>
                     <!-- error message jika user belum memilih durasi booking-->
-                    <span class="error-message">Pilih durasi booking</span>
-                </div>
-
-                <div class="form-group">
-                    <label for="participants">Jumlah Peserta *</label>
-                    <input type="text" id="participants" name="participants" placeholder="Contoh: 5" required>
-                    <!-- error message jika user belum memasukkan jumlah peserta-->
-                    <span class="error-message">Masukkan jumlah peserta yang valid</span>
+                    <span class="error-message">Pilih jam booking</span>
                 </div>
             </div>
-
             <div class="form-group">
                 <label for="purpose">Tujuan penggunaan *</label>
                 <textarea id="purpose" name="purpose" placeholder="Jelaskan tujuan penggunaan ruangan"></textarea>
@@ -104,6 +85,12 @@
                 <label for="specialRequest">Permintaan Khusus</label>
                 <textarea id="specialRequest" name="specialRequest"
                     placeholder="Projector, whiteboard, dll (opsional)"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="text" id="email" name="email" placeholder="johndoe@gmail.com" required>
+                <span class="error-message">Masukkan email</span>
             </div>
 
             <div class="form-group">
