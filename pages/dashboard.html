@@ -1,11 +1,88 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Form Booking Ruangan</title>
+    <link rel="stylesheet" href="../css/bookingDetail.css">
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <script src="../js/bookingDetail/slideshow.js"></script>
+    <script src="../js/bookingDetail/script.js"></script>
+    <script src="../js/dashboard/dashboard.js"></script>
 </head>
+
 <body>
+    <header class="main-header">
+        <div class="header-left">
+            <img id="app-logo" src="../images/logo.png" alt="Logo Aplikasi">
+        </div>
+
+        <nav class="header-nav">
+            <a href="dashboard.html" class="nav-link">Dashboard</a>
+            <a href="history.html" class="nav-link">History</a>
+        </nav>
+
+        <div class="header-right">
+            <span id="usernameDisplay">Hi, User!</span>
+            <a href="login.html" id="logoutButton" class="nav-link logout"><img id="logout_icon"
+                    src="../images/logout_icon.png" alt=""></a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboardHeader">
+            <h1>Dashboard</h1>
+            <div class="dateContainer">
+                <div class="form-group">
+                    <input type="date" class="dashboardDate" required>
+                    <!-- error message jika user belum memilih tanggal booking-->
+                    <span class="error-message">Pilih tanggal booking</span>
+                </div>
+            </div>
+        </div>
+        
+<div class="dashboardContainer">
     
+    <div class="room-options-container">
+        <div class="room-option-card active">
+            <h3>Meeting Room A</h3>
+            <p>Kapasitas: 10 orang</p>
+        </div>
+
+        <div class="room-option-card">
+            <h3>Ruang Konferensi B</h3>
+            <p>Kapasitas: 25 orang</p>
+        </div>
+
+        <div class="room-option-card">
+            <h3>Ruang Diskusi C</h3>
+            <p>Kapasitas: 5 orang</p>
+        </div>
+    </div>
+
+    <div class="timeslot-container">
+        <div class="timeslot-grid">
+            <div class="timeslot booked">
+                <span class="time">10:00 - 11:00</span>
+                <span class="status-label">Dibooking</span>
+            </div>
+            <div class="timeslot available">
+                <span class="time">11:00 - 12:00</span>
+                <span class="status-label">Tersedia</span>
+            </div>
+            <div class="timeslot available">
+                <span class="time">12:00 - 13:00</span>
+                <span class="status-label">Tersedia</span>
+            </div>
+            <div class="timeslot booked">
+                <span class="time">13:00 - 14:00</span>
+                <span class="status-label">Dibooking</span>
+            </div>
+            </div>
+    </div>
+
+</div>
 </body>
+
 </html>
