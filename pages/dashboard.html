@@ -33,56 +33,55 @@
     <div class="container">
         <div class="dashboardHeader">
             <h1>Dashboard</h1>
+            <a class="bookingButton" href="bookingDetail.html">Booking</a>
+        </div>
+        
+        <div class="dashboardContainer">
             <div class="dateContainer">
                 <div class="form-group">
                     <input type="date" class="dashboardDate" required>
-                    <!-- error message jika user belum memilih tanggal booking-->
-                    <span class="error-message">Pilih tanggal booking</span>
                 </div>
             </div>
-        </div>
-        
-<div class="dashboardContainer">
-    
-    <div class="room-options-container">
-        <div class="room-option-card active">
-            <h3>Meeting Room A</h3>
-            <p>Kapasitas: 10 orang</p>
-        </div>
 
-        <div class="room-option-card">
-            <h3>Ruang Konferensi B</h3>
-            <p>Kapasitas: 25 orang</p>
-        </div>
+            <div class="room-options-container">
+                <div class="room-option-card">
+                    <h3>Meeting Room A</h3>
+                    <p>Kapasitas: 10 orang</p>
+                </div>
 
-        <div class="room-option-card">
-            <h3>Ruang Diskusi C</h3>
-            <p>Kapasitas: 5 orang</p>
-        </div>
+                <div class="room-option-card ">
+                    <h3>Ruang Konferensi B</h3>
+                    <p>Kapasitas: 25 orang</p>
+                </div>
+
+                <div class="room-option-card active">
+                    <h3>Ruang Diskusi C</h3>
+                    <p>Kapasitas: 5 orang</p>
+                </div>
+            </div>
+
+            <div class="timeslot-container">
+                <div class="timeslot-grid">
+                    <div class="timeslot booked">
+                        <span class="time">8:00 - 11:00</span>
+                        <span class="status-label">Dibooking</span>
+                    </div>
+                    <div class="timeslot available">
+                        <span class="time">11:00 - 13:00</span>
+                        <span class="status-label">Tersedia</span>
+                    </div>
+                    <div class="timeslot available">
+                        <span class="time">13:00 - 15:00</span>
+                        <span class="status-label">Tersedia</span>
+                    </div>
+                    <div class="timeslot booked">
+                        <span class="time">15:00 - 18:00</span>
+                        <span class="status-label">Dibooking</span>
+                    </div>
+                    </div>
+            </div>
+
     </div>
-
-    <div class="timeslot-container">
-        <div class="timeslot-grid">
-            <div class="timeslot booked">
-                <span class="time">10:00 - 11:00</span>
-                <span class="status-label">Dibooking</span>
-            </div>
-            <div class="timeslot available">
-                <span class="time">11:00 - 12:00</span>
-                <span class="status-label">Tersedia</span>
-            </div>
-            <div class="timeslot available">
-                <span class="time">12:00 - 13:00</span>
-                <span class="status-label">Tersedia</span>
-            </div>
-            <div class="timeslot booked">
-                <span class="time">13:00 - 14:00</span>
-                <span class="status-label">Dibooking</span>
-            </div>
-            </div>
-    </div>
-
-</div>
 </body>
 
 </html>

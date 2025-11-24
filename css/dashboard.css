@@ -3,18 +3,41 @@
     justify-content: space-between;
 }
 
+.dashboardContainer{
+    margin-top: 50px;
+}
+
+.bookingButton {
+    background-color: #24a0ed !important;
+    color: white;
+    padding: 14px 26px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    text-decoration: none;
+}
+
+.bookingButton:hover {
+    opacity: 0.9;
+}
+
 .room-options-container {
     display: flex;
     justify-content: space-around;
-    gap: 15px;
+    /* gap: 15px; */
     margin-bottom: 0px;
 }
 
 .room-option-card {
     flex: 1;
     padding: 20px;
-    border: 2px solid #ccc;
     border-radius: 10px;
+    border-bottom: 0;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease-in-out;
@@ -26,19 +49,32 @@
     color: #333;
 }
 
-/* Styling untuk timeslot-container */
 .timeslot-container {
-    /* padding: 20px; */
-    background: #f9f9f9;
+    padding: 10px;
+    background: #eef2f7;
     border-radius: 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid black;
+    border-top: 0;
 }
+
+.room-option-card:not(:active){
+    border-bottom: 1px solid black;
+}
+
+.room-options-container > .active{
+    background: #eef2f7;
+    border: 1px solid black;
+    border-bottom: 0;
+}
+
 
 .timeslot-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 15px;
-    margin-top: 20px;
 }
 
 .timeslot {
