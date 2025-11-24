@@ -44,8 +44,13 @@ function handleSubmit(event) {
         return;
     }
 
-    alert("Booking berhasil! Data siap dikirim ke server.");
-    window.location.href = "history.html";
+    // Menampilkan pop up
+    document.getElementById("successPopup").style.display = "flex";
+
+    // pindah halaman ke history.html
+    document.getElementById("popupOkBtn").onclick = function () {
+        window.location.href = "history.html";
+    };
 
 }
 
