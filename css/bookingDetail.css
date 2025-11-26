@@ -96,48 +96,23 @@ body {
     gap: 30px;
 }
 
-.room-image img {
-    height: 250px;
-    object-fit: cover;
-}
-
-.slideshow-container {
-    position: relative;
-    max-width: 100%;
-    margin: auto;
-}
-
-.slide {
-    display: none;
-}
-
-.slide img {
+.room-image {
     width: 100%;
+    height: 300px;
+    margin-bottom: 25px;
     border-radius: 10px;
+    overflow: hidden;
+    background: #e8e8e8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.dots {
-    text-align: center;
-    padding: 10px 0;
-}
-
-.dot {
-    height: 12px;
-    width: 12px;
-    margin: 0 4px;
-    background-color: #bbb;
-    border-radius: 50%;
-    display: inline-block;
-    cursor: pointer;
-}
-
-.active-dot {
-    background-color: #717171;
-}
-
-.fade {
-    animation-name: fade;
-    animation-duration: 1s;
+.room-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
 }
 
 .room-info {
@@ -155,19 +130,22 @@ body {
     font-weight: bold;
     color: #333;
     display: block;
+    margin-bottom: 5px;
 }
 
 .room-capacity {
     font-size: 15px;
     color: #666;
+    display: block;
 }
 
 .room-status p {
     background: #3bb54a;
     color: white;
-    padding: 5px 12px;
+    padding: 8px 15px;
     border-radius: 6px;
     font-weight: bold;
+    margin: 0;
 }
 
 .info-box {
@@ -196,6 +174,7 @@ body {
 .form-group label {
     font-weight: 600;
     font-size: 15px;
+    color: #333;
 }
 
 .form-group input,
@@ -203,29 +182,28 @@ body {
 .form-group textarea {
     width: 100%;
     padding: 12px 14px;
-    border-radius: 10px;
+    border-radius: 8px;
     border: 1px solid #d0d7de;
     background: #ffffff;
     font-size: 15px;
-    transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
-    border-color: #3bb54a;
-    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 textarea {
     min-height: 90px;
     resize: vertical;
+    font-family: Arial, sans-serif;
 }
 
 .error-message {
     font-size: 13px;
     color: #e63946;
     display: none;
+    margin-top: 4px;
+}
+
+.error-message.show {
+    display: block;
 }
 
 .button-group {
@@ -240,15 +218,15 @@ textarea {
     color: #333;
     padding: 14px 20px;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: 0.2s;
+    transition: background-color 0.2s;
 }
 
 .btn-cancel:hover {
-    background: #e4e4e4;
+    background: #c8c8c8;
 }
 
 .btn-submit {
@@ -256,15 +234,15 @@ textarea {
     color: white;
     padding: 14px 20px;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: 0.2s;
+    transition: background-color 0.2s;
 }
 
 .btn-submit:hover {
-    opacity: 0.9;
+    background: #2d8c3a;
 }
 
 .popup-overlay {
@@ -279,6 +257,10 @@ textarea {
     align-items: center;
 }
 
+.popup-overlay.show {
+    display: flex;
+}
+
 .popup-box {
     background: white;
     padding: 30px;
@@ -286,23 +268,47 @@ textarea {
     width: 350px;
     text-align: center;
     box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+    animation: slideIn 0.3s ease;
 }
 
 .popup-box h2 {
     margin-bottom: 10px;
+    color: #333;
 }
 
-.popup-box button {
-    margin-top: 15px;
-    padding: 10px 20px;
+.popup-box h3 {
+    color: #FF5252;
+}
+
+.popup-box p {
+    color: #555;
+    margin-bottom: 20px;
+}
+
+#popupOkBtn {
+    padding: 10px 25px;
     border: none;
     background: #3bb54a;
     color: white;
     border-radius: 8px;
     cursor: pointer;
     font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+}
+
+#unsuccessOkBtn {
+    padding: 10px 25px;
+    border: none;
+    background: #D32F2F;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.2s;
 }
 
 .popup-box button:hover {
-    opacity: 0.9;
+    background: #2d8c3a;
 }

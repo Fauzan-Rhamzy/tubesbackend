@@ -40,7 +40,14 @@ function handleSubmit(event) {
     isValid = Boolean(isValid);
 
     if (!isValid) {
-        alert("Silakan lengkapi semua data yang wajib diisi.");
+        // Tampilkan popup gagal
+        document.getElementById("unsuccessPopup").style.display = "flex";
+
+        // Tombol OK untuk menutup popup gagal
+        document.getElementById("unsuccessOkBtn").onclick = function () {
+            document.getElementById("unsuccessPopup").style.display = "none";
+        };
+
         return;
     }
 

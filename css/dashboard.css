@@ -1,10 +1,10 @@
-.dashboardHeader{
+.dashboardHeader {
     display: flex;
     justify-content: space-between;
     margin-bottom: 20px;
 }
 
-.dashboardContainer{
+.dashboardContainer {
     margin-top: 1rem;
 }
 
@@ -50,7 +50,7 @@
     color: #333;
 }
 
-.room-option-card img{
+.room-option-card img {
     margin-top: 1rem;
     max-height: 100%;
     max-width: 100%;
@@ -67,11 +67,11 @@
     border-top: 0;
 }
 
-.room-option-card:not(:active){
+.room-option-card:not(:active) {
     border-bottom: 1px solid black;
 }
 
-.room-options-container > .active{
+.room-options-container>.active {
     background: #eef2f7;
     border: 1px solid black;
     border-bottom: 0;
@@ -112,15 +112,15 @@
     color: #999;
 }
 
-.dateContainer{
+.dateContainer {
     display: flex;
     align-items: center;
-    justify-content:end;
-    padding: 20px 0 ;
+    justify-content: end;
+    padding: 20px 0;
 }
 
-.dateContainer .form-group{
-    display: flex;   
+.dateContainer .form-group {
+    display: flex;
     align-items: center;
     margin-bottom: 0 !important;
 }
