@@ -169,3 +169,16 @@ body {
 .btn-cancel-booking:hover {
     background: #c92b34;
 }
+
+.history-card-content {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.history-card img.history-image {
+    width: 200px;
+    height: 145px;
+    object-fit: cover;
+    border-radius: 10px;
+}

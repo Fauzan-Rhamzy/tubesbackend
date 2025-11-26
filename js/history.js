@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderHistory();
 });
 
-// Fungsi Cancel Booking
+// Cancel Booking
 function cancelBooking(id) {
     const confirmCancel = confirm("Yakin ingin membatalkan booking?");
     if (!confirmCancel) return;
@@ -48,14 +48,14 @@ function cancelBooking(id) {
     if (index !== -1) {
         bookingHistory[index].status = "cancelled_by_user"; 
         alert("Booking berhasil dibatalkan!");
-        renderHistory(); // refresh tampilan
+        renderHistory();
     }
 }
 
-// Render Card Booking
+// Card Booking
 function renderHistory() {
     const list = document.getElementById("historyList");
-    list.innerHTML = ""; // reset dulu
+    list.innerHTML = "";
 
     bookingHistory.forEach(item => {
         const card = document.createElement("div");
@@ -68,32 +68,40 @@ function renderHistory() {
             cancelled_by_user: "status-rejected"
         }[item.status];
 
-        // Jika status allowed → tampilkan tombol cancel
         let showCancel = (item.status === "waiting" || item.status === "approved");
 
         card.innerHTML = `
-            <div class="room-name">${item.room}</div>
-            <div class="detail">Tanggal: ${item.date}</div>
-            <div class="detail">Waktu: ${item.time}</div>
-            <div class="detail">Tujuan: ${item.purpose}</div>
+            <div class="history-card-content">
 
-            <div style="margin-top:12px;">
-                <span class="status ${statusClass}">
-                    ${item.status.toUpperCase().replace("_BY_USER","")}
-                </span>
+                <!-- DETAIL TEXT -->
+                <div>
+                    <div class="room-name">${item.room}</div>
+                    <div class="detail">Tanggal: ${item.date}</div>
+                    <div class="detail">Waktu: ${item.time}</div>
+                    <div class="detail">Tujuan: ${item.purpose}</div>
 
-                ${showCancel ? `
-                    <button class="btn-cancel-booking" data-id="${item.id}">
-                        Batalkan Booking
-                    </button>
-                ` : ""}
+                    <div style="margin-top:12px;">
+                        <span class="status ${statusClass}">
+                            ${item.status.toUpperCase().replace("_BY_USER","")}
+                        </span>
+
+                        ${showCancel ? `
+                            <button class="btn-cancel-booking" data-id="${item.id}">
+                                Batalkan Booking
+                            </button>
+                        ` : ""}
+                    </div>
+                </div>
+
+                <!-- GAMBAR - path nanti kamu ganti -->
+                <img class="history-image" src="../images/ruang a/meetingroom-1.jpg" alt="Room Image">
+
             </div>
         `;
 
         list.appendChild(card);
     });
 
-    // Event listener tombol cancel
     document.querySelectorAll(".btn-cancel-booking").forEach(btn => {
         btn.addEventListener("click", () => {
             cancelBooking(parseInt(btn.dataset.id));
