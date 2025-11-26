@@ -5,7 +5,7 @@
 }
 
 .dashboardContainer{
-    margin-top: 50px;
+    margin-top: 1rem;
 }
 
 .bookingButton {
@@ -48,6 +48,12 @@
 .room-option-card h3 {
     margin-top: 0;
     color: #333;
+}
+
+.room-option-card img{
+    margin-top: 1rem;
+    max-height: 100%;
+    max-width: 100%;
 }
 
 .timeslot-container {
@@ -104,4 +110,17 @@
     background-color: #f0f0f0;
     border: 1px solid #ccc;
     color: #999;
+}
+
+.dateContainer{
+    display: flex;
+    align-items: center;
+    justify-content:end;
+    padding: 20px 0 ;
+}
+
+.dateContainer .form-group{
+    display: flex;   
+    align-items: center;
+    margin-bottom: 0 !important;
 }
