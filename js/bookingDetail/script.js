@@ -40,7 +40,7 @@ function handleSubmit(event) {
     isValid = Boolean(isValid);
 
     if (!isValid) {
-        // Tampilkan popup gagal
+        // Menampilkan popup gagal
         document.getElementById("unsuccessPopup").style.display = "flex";
 
         // Tombol OK untuk menutup popup gagal
@@ -79,6 +79,42 @@ function setupLiveValidation() {
     });
 }
 
+// untuk update info ruangan (mengikuti drop down)
+function updateRoomInfo() {
+    const roomSelect = document.getElementById('roomSelect');
+    const roomImage = document.querySelector('.room-image img');
+    const roomName = document.getElementById('roomName');
+    const roomCapacity = document.getElementById('roomCapacity');
+    const roomIdInput = document.getElementById('roomId');
+
+    if (!roomSelect) return;
+
+    const selectedOption = roomSelect.options[roomSelect.selectedIndex];
+    const roomText = selectedOption.textContent.trim();
+    const capacity = selectedOption.getAttribute('data-capacity');
+    const image = selectedOption.getAttribute('data-image');
+    const roomId = selectedOption.value;
+
+    // Update teks
+    if (roomName) {
+        roomName.textContent = `Ruangan Pilihan: ${roomText}`;
+    }
+
+    if (roomCapacity) {
+        roomCapacity.textContent = `Kapasitas: ${capacity} orang`;
+    }
+
+    // Update gambar
+    if (image && roomImage) {
+        roomImage.src = image;
+    }
+
+    // Update hidden input room ID
+    if (roomIdInput) {
+        roomIdInput.value = roomId;
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     const submitBtn = document.querySelector(".btn-submit");
 
@@ -97,6 +133,12 @@ document.addEventListener("DOMContentLoaded", () => {
         cancelBtn.addEventListener("click", () => {
             window.location.href = "dashboard.html";
         });
+    }
+
+    // event listener untuk dropdown ruangan
+    const roomSelect = document.getElementById('roomSelect');
+    if (roomSelect) {
+        roomSelect.addEventListener('change', updateRoomInfo);
     }
 
 });
