@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderHistory();
 });
 
-// Cancel Booking
+//cancel Booking
 function cancelBooking(id) {
     const confirmCancel = confirm("Yakin ingin membatalkan booking?");
     if (!confirmCancel) return;
@@ -52,7 +52,7 @@ function cancelBooking(id) {
     }
 }
 
-// Card Booking
+//list Booking
 function renderHistory() {
     const list = document.getElementById("historyList");
     list.innerHTML = "";
