@@ -73,7 +73,6 @@ function renderHistory() {
         card.innerHTML = `
             <div class="history-card-content">
 
-                <!-- DETAIL TEXT -->
                 <div>
                     <div class="room-name">${item.room}</div>
                     <div class="detail">Tanggal: ${item.date}</div>
@@ -93,7 +92,6 @@ function renderHistory() {
                     </div>
                 </div>
 
-                <!-- GAMBAR - path nanti kamu ganti -->
                 <img class="history-image" src="../images/ruang a/meetingroom-1.jpg" alt="Room Image">
 
             </div>
