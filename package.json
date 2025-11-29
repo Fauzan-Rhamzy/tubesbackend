@@ -1,0 +1,24 @@
+{
+  "name": "tubesbackend",
+  "version": "1.0.0",
+  "description": "Tugas Besar Mata Kuliah Pemrograman Back End",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Fauzan-Rhamzy/tubesbackend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Fauzan-Rhamzy/tubesbackend/issues"
+  },
+  "homepage": "https://github.com/Fauzan-Rhamzy/tubesbackend#readme",
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}
