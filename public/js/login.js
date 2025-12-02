@@ -10,7 +10,8 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
     } else {
         console.log("Email:", email);
         console.log("Password:", pass);
-        window.location.href = "./dashboard.html";
+        window.location.href = "./dashboard";
+
     }
 
 });
