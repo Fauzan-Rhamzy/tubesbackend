@@ -4,6 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Set tombol booking disabled di awal
     disableBookingButton();
+
+    const bookingButton = document.querySelector(".bookingButton");
+
+    bookingButton.addEventListener("click", handleBooking);
 });
 
 // Fungsi untuk disable tombol booking
@@ -14,6 +18,11 @@ function disableBookingButton() {
         bookingButton.style.pointerEvents = 'none';
         bookingButton.style.cursor = 'not-allowed';
     }
+}
+
+function handleBooking(event) {
+    // event.preventDefault();
+    window.location.href = "bookingDetail.html";
 }
 
 // Fungsi untuk enable tombol booking

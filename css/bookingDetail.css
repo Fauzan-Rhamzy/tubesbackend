@@ -140,8 +140,8 @@ body {
 }
 
 .room-status p {
-    background: #3bb54a;
-    color: white;
+    background: lightgreen;
+    color: #1E7E34;
     padding: 8px 15px;
     border-radius: 6px;
     font-weight: bold;

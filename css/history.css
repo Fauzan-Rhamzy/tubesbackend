@@ -142,15 +142,18 @@ body {
 }
 
 .status-approved {
-    background: #3bb54a;
+    background: lightgreen;
+    color: #1E7E34;
 }
 
 .status-waiting {
-    background: #f2b600;
+    background: #fff9c4;
+    color: #856404;
 }
 
 .status-rejected {
-    background: #e63946;
+    background: #F8D7DA;
+    color: #721C24;
 }
 
 .btn-cancel-booking {
