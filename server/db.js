@@ -6,7 +6,7 @@ const pool = new Pool({
   user: 'postgres',      // Default user postgres
   host: 'localhost',
   database: 'backend_tubes',  // Ganti dengan nama database Anda
-  password: 'ayamjantanada2', // Ganti dengan password pgAdmin Anda
+  password: 'postgres', // Ganti dengan password pgAdmin Anda
   port: 5432,
 });
 

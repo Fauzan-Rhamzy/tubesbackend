@@ -1,5 +1,5 @@
 // Edit js/login.js
-document.getElementById("loginForm").addEventListener("submit", async function(e){
+document.getElementById("loginForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const email = document.getElementById("email").value;
@@ -26,12 +26,14 @@ document.getElementById("loginForm").addEventListener("submit", async function(e
         if (response.ok) {
             // Login Berhasil
             console.log("Login sukses:", data);
-            
-            // Simpan info user (bisa buat ditampilkan di dashboard)
+
+            // Menyimpan info user (username, role, email)
             localStorage.setItem("username", data.username);
-            
+            localStorage.setItem("role", data.role);
+            localStorage.setItem("email", email);
+
             // Pindah halaman
-            if(data.role === 'admin') {
+            if (data.role === 'admin') {
                 window.location.href = "./admin_page.html";
             } else {
                 window.location.href = "./dashboard.html";

@@ -25,17 +25,8 @@ const bookingHistory = [
     }
 ];
 
-// Load username & logout
+// Render history saat halaman load
 document.addEventListener("DOMContentLoaded", () => {
-    let username = localStorage.getItem("username") || "User";
-    document.getElementById("usernameDisplay").textContent = "Hi, " + username + "!";
-
-    document.getElementById("logoutButton").addEventListener("click", function (e) {
-        e.preventDefault();
-        localStorage.removeItem("username");
-        window.location.href = "login.html";
-    });
-
     renderHistory();
 });
 
@@ -46,7 +37,7 @@ function cancelBooking(id) {
 
     const index = bookingHistory.findIndex(item => item.id === id);
     if (index !== -1) {
-        bookingHistory[index].status = "cancelled_by_user"; 
+        bookingHistory[index].status = "cancelled_by_user";
         alert("Booking berhasil dibatalkan!");
         renderHistory();
     }
@@ -72,7 +63,6 @@ function renderHistory() {
 
         card.innerHTML = `
             <div class="history-card-content">
-
                 <div>
                     <div class="room-name">${item.room}</div>
                     <div class="detail">Tanggal: ${item.date}</div>
@@ -81,7 +71,7 @@ function renderHistory() {
 
                     <div style="margin-top:12px;">
                         <span class="status ${statusClass}">
-                            ${item.status.toUpperCase().replace("_BY_USER","")}
+                            ${item.status.toUpperCase().replace("_BY_USER", "")}
                         </span>
 
                         ${showCancel ? `
@@ -93,7 +83,6 @@ function renderHistory() {
                 </div>
 
                 <img class="history-image" src="../images/ruang a/meetingroom-1.jpg" alt="Room Image">
-
             </div>
         `;
 

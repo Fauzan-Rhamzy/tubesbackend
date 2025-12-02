@@ -18,7 +18,7 @@ const server = http.createServer(async (req, res) => {
     // 2. RUTE: LOGIN (POST /api/login)
     if (req.url === '/api/login' && req.method === 'POST') {
         let body = '';
-        
+
         // Terima data potong-potong (chunk) dari frontend
         req.on('data', chunk => {
             body += chunk.toString();
@@ -33,7 +33,7 @@ const server = http.createServer(async (req, res) => {
                 // --- LOGIKA DATABASE ---
                 // Cek apakah user ada di database
                 const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-                
+
                 if (result.rows.length === 0) {
                     // User tidak ditemukan
                     res.writeHead(401, { 'Content-Type': 'application/json' });
@@ -52,7 +52,7 @@ const server = http.createServer(async (req, res) => {
 
                 // Login Sukses
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ 
+                res.end(JSON.stringify({
                     message: 'Login berhasil',
                     username: user.username,
                     role: user.role // misal ada kolom role (admin/user)
@@ -64,9 +64,52 @@ const server = http.createServer(async (req, res) => {
                 res.end(JSON.stringify({ message: 'Error server' }));
             }
         });
-    } 
+    }
 
-    // 3. JIKA RUTE TIDAK DITEMUKAN
+    // 3. RUTE: GET ROOMS (GET /api/rooms)
+    else if (req.url === '/api/rooms' && req.method === 'GET') {
+        try {
+            // Ambil semua data ruangan dari database
+            const result = await db.query('SELECT id, name, image_path, capacity FROM rooms ORDER BY id ASC');
+
+            // Kirim data ruangan
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(result.rows));
+
+        } catch (error) {
+            console.error(error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
+        }
+    }
+
+    // 4. RUTE: GET ROOM BY ID (GET /api/rooms/:id)
+    else if (req.url.startsWith('/api/rooms/') && req.method === 'GET') {
+        try {
+            // Ambil ID dari URL
+            const id = req.url.split('/')[3];
+
+            // Query ruangan berdasarkan ID
+            const result = await db.query('SELECT id, name, image_path, capacity FROM rooms WHERE id = $1', [id]);
+
+            if (result.rows.length === 0) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Ruangan tidak ditemukan' }));
+                return;
+            }
+
+            // Kirim data ruangan
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(result.rows[0]));
+
+        } catch (error) {
+            console.error(error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
+        }
+    }
+
+    // 5. JIKA RUTE TIDAK DITEMUKAN
     else {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Halaman tidak ditemukan' }));
