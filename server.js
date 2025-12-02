@@ -2,7 +2,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import querystring from "node:querystring";
-// import db from "./db.js";
+import db from "./db.js";
 
 const PORT = 3000;
 const server = new http.Server();
@@ -22,13 +22,17 @@ server.on("request", (request, response) => {
         request.on("data", chunk => {
             body += chunk.toString();
         });
-        request.on("end", () => {
+        request.on("end", async() => {
             const {email, password} = JSON.parse(body);
 
-            // const result =
+            const result = await db.query('SELECT * FROM users WHERE email = $1 AND password = $2', [email, password]);
             console.log("Email:", email);
             console.log("Password:", password);
-            response.end("Login data received");
+            if (result.rows.length > 0) {
+                const user = result.rows[0];
+                console.log(user);
+                response.end("Login data received");
+            }
         });
         return;
     }

@@ -1,4 +1,4 @@
-document.getElementById("loginForm").addEventListener("submit", function(e){
+document.getElementById("loginForm").addEventListener("submit", async function(e){
     e.preventDefault();
 
     const email = document.getElementById("email").value;
@@ -10,8 +10,18 @@ document.getElementById("loginForm").addEventListener("submit", function(e){
     } else {
         console.log("Email:", email);
         console.log("Password:", pass);
-        window.location.href = "./dashboard";
-
+        try{
+            const response = await fetch("/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({email: email, password: pass})
+            });
+            const data = await response.text();
+            console.log(data);
+        } catch (error) {
+            console.error("Error during login:", error);
+        }
     }
-
 });
