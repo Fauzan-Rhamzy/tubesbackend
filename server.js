@@ -2,7 +2,7 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import querystring from "node:querystring";
-import db from "./db.js";
+// import db from "./db.js";
 
 const PORT = 3000;
 const server = new http.Server();
