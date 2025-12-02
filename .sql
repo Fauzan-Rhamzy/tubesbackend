@@ -24,3 +24,16 @@ INSERT INTO rooms VALUES
 (1, 'Meeting Room A', '../images/ruang a/Meeting-Room-GST.webp', 10),
 (2, 'Conference Room B', '../images/ruang a/194_1510807301.67.lg.png', 25),
 (3, 'Discussion Room C', '../images/ruang a/meja miting kantor ELSINTA revisi copy.jpg', 5);
+
+CREATE TABLE bookings (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL,
+    room_id INT NOT NULL,
+    booking_date DATE NOT NULL,
+    booking_time VARCHAR(50) NOT NULL,
+    purpose TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (room_id) REFERENCES rooms(id)
+);
