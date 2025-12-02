@@ -5,7 +5,7 @@ import db from "./db.js";
 
 const PORT = 3000;
 const server = new http.Server();
-server.on("request", (request, response) => {
+server.on("request", async (request, response) => {
     console.log(`Request received: ${request.method} ${request.url}`);
 
     // cek method
@@ -14,6 +14,44 @@ server.on("request", (request, response) => {
     const url = request.url;
     // cek extension
     const extension = path.extname(request.url);
+
+    
+    // handle API requests
+    if (url.startsWith('/api')) {
+        if (url === '/api/bookings' && method === 'GET') {
+            const result = await db.query('SELECT * FROM bookings');
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(result.rows));
+            return;
+        }
+        if (url === '/api/users' && method === 'GET') {
+            const result = await db.query('SELECT * FROM users');
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(result.rows));
+            return;
+        }
+        if (url === '/api/rooms' && method === 'GET') {
+            const result = await db.query('SELECT * FROM rooms');
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(result.rows));
+            return;
+        }
+        const bookingStatusMatch = url.match(/\/api\/bookings\/(\d+)\/status/);
+        if (bookingStatusMatch && method === 'POST') {
+            const id = bookingStatusMatch[1];
+            let body = '';
+            request.on('data', chunk => {
+                body += chunk.toString();
+            });
+            request.on('end', async () => {
+                const { status } = JSON.parse(body);
+                await db.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, id]);
+                response.writeHead(200, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ message: 'Status updated successfully' }));
+            });
+            return;
+        }
+    }
 
     // hdandle post ke login
     if (url === "/login" && method === "POST") {
