@@ -1,3 +1,56 @@
+// Fungsi untuk load detail ruangan yang dipilih dari dashboard
+async function loadSelectedRoom() {
+    try {
+        // Ambil ID ruangan dari localStorage
+        const selectedRoomId = localStorage.getItem('selectedRoomId');
+
+        // Fetch detail ruangan dari API
+        const response = await fetch(`http://localhost:3000/api/rooms/${selectedRoomId}`);
+        const room = await response.json();
+
+        // Update tampilan dengan data ruangan
+        updateRoomDisplay(room);
+
+        // Set roomId ke hidden input
+        const roomIdInput = document.getElementById('roomId');
+        if (roomIdInput) {
+            roomIdInput.value = room.id;
+        }
+
+    } catch (error) {
+        console.error('Error loading room details:', error);
+        alert('Failed to load room details');
+    }
+}
+
+// Fungsi untuk update tampilan ruangan di halaman booking detail
+function updateRoomDisplay(room) {
+    // Update gambar ruangan
+    const roomImage = document.querySelector('.room-image img');
+    if (roomImage) {
+        roomImage.src = room.image_path;
+        roomImage.alt = room.name;
+    }
+
+    // Update nama ruangan
+    const roomName = document.querySelector('.room-name');
+    if (roomName) {
+        roomName.textContent = `Selected Room: ${room.name}`;
+    }
+
+    // Update kapasitas ruangan
+    const roomCapacity = document.querySelector('.room-capacity');
+    if (roomCapacity) {
+        roomCapacity.textContent = `Capacity: ${room.capacity} persons`;
+    }
+
+    // Update status ruangan 
+    const roomStatus = document.querySelector('.room-status p');
+    if (roomStatus) {
+        roomStatus.textContent = 'Available';
+    }
+}
+
 function showError(inputElement) {
     const errorMessage = inputElement.parentElement.querySelector('.error-message');
     if (errorMessage) {
@@ -31,7 +84,7 @@ function handleSubmit(event) {
     const duration = document.getElementById('duration');
     const purpose = document.getElementById('purpose');
 
-    let isValid = true;
+    var isValid = true;
 
     isValid &= validateInput(bookingDate);
     isValid &= validateInput(duration);
@@ -80,6 +133,9 @@ function setupLiveValidation() {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    // Load detail ruangan yang dipilih
+    loadSelectedRoom();
+
     const submitBtn = document.querySelector(".btn-submit");
 
     if (submitBtn) submitBtn.addEventListener("click", handleSubmit);
