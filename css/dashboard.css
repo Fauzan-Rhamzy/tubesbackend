@@ -1,3 +1,16 @@
+.bookingButton.disabled {
+    background-color: #ccc;
+    color: #666;
+}
+
+.chooseRoomTitle {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+}
+
 .dashboardContainer {
     margin-top: 1rem;
 }

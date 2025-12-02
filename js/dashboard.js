@@ -1,10 +1,33 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Load ruangan dari database
     loadRooms();
+
+    // Set tombol booking disabled di awal
+    disableBookingButton();
 });
 
+// Fungsi untuk disable tombol booking
+function disableBookingButton() {
+    const bookingButton = document.querySelector('.bookingButton');
+    if (bookingButton) {
+        bookingButton.classList.add('disabled');
+        bookingButton.style.pointerEvents = 'none';
+        bookingButton.style.cursor = 'not-allowed';
+    }
+}
 
-//Load data ruangan dari databse 
+// Fungsi untuk enable tombol booking
+function enableBookingButton() {
+    const bookingButton = document.querySelector('.bookingButton');
+    if (bookingButton) {
+        bookingButton.classList.remove('disabled');
+        bookingButton.style.pointerEvents = 'auto';
+        bookingButton.style.opacity = '1';
+        bookingButton.style.cursor = 'pointer';
+    }
+}
+
+//Load data ruangan dari database 
 async function loadRooms() {
     try {
         // Fetch data dari Node.js API (ini di set di server.js)
@@ -18,17 +41,16 @@ async function loadRooms() {
         setupRoomSelection();
     } catch (error) {
         console.error('Error loading rooms:', error);
-        // Tampilkan pesan error
+        // Menampilkan pesan error
         const container = document.querySelector('.room-options-container');
         if (container) {
-            container.innerHTML = '<p style="color: red;">Gagal memuat data ruangan</p>';
+            container.innerHTML = '<p style="color: red;">Unable to load room data</p>';
         }
     }
 }
 
-/**
- * Fungsi untuk menampilkan ruangan ke HTML
- */
+// Fungsi untuk menampilkan ruangan ke HTML
+
 function displayRooms(rooms) {
     const container = document.querySelector('.room-options-container');
 
@@ -45,16 +67,14 @@ function displayRooms(rooms) {
         card.innerHTML = `
             <h3>${room.name}</h3>
             <img src="${room.image_path}" alt="${room.name}">
-            <p>Kapasitas: ${room.capacity} orang</p>
+            <p>Capacity: ${room.capacity} persons</p>
         `;
 
         container.appendChild(card);
     });
 }
 
-/**
- * Setup click handler untuk pemilihan ruangan
- */
+// Setup click handler untuk pemilihan ruangan
 function setupRoomSelection() {
     const roomCards = document.querySelectorAll(".room-option-card");
 
@@ -66,9 +86,12 @@ function setupRoomSelection() {
             // Tambahkan active ke card yang diklik
             this.classList.add("active");
 
-            // Simpan ID ruangan yang dipilih (opsional)
+            // Simpan ID ruangan yang dipilih
             const roomId = this.getAttribute('data-room-id');
             localStorage.setItem('selectedRoomId', roomId);
+
+            // Enable tombol booking setelah ruangan dipilih
+            enableBookingButton();
         });
     });
 }

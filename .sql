@@ -22,5 +22,5 @@ CREATE TABLE rooms (
 -- insert data ruangan
 INSERT INTO rooms VALUES 
 (1, 'Meeting Room A', '../images/ruang a/Meeting-Room-GST.webp', 10),
-(2, 'Ruang Konferensi B', '../images/ruang a/194_1510807301.67.lg.png', 25),
-(3, 'Ruang Diskusi C', '../images/ruang a/meja miting kantor ELSINTA revisi copy.jpg', 5);
+(2, 'Conference Room B', '../images/ruang a/194_1510807301.67.lg.png', 25),
+(3, 'Discussion Room C', '../images/ruang a/meja miting kantor ELSINTA revisi copy.jpg', 5);
