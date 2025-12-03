@@ -8,7 +8,7 @@ async function loadSelectedRoom() {
         const response = await fetch(`http://localhost:3000/api/rooms/${selectedRoomId}`);
         const room = await response.json();
 
-        // Update tampilan dengan data ruangan
+        // Update data ruangan
         updateRoomDisplay(room);
 
         // Set roomId ke hidden input
@@ -77,7 +77,6 @@ function validateInput(inputElement) {
     return true;
 }
 
-// Fungsi untuk convert waktu booking dari option value ke format text
 function getBookingTimeText(timeValue) {
     const timeMap = {
         '1': '08.00 - 11.00',
@@ -86,6 +85,80 @@ function getBookingTimeText(timeValue) {
         '4': '15.00 - 18.00'
     };
     return timeMap[timeValue] || '';
+}
+
+// cek ketersediaan waktu booking
+async function checkAvailability(roomId, date) {
+    try {
+        const response = await fetch(`http://localhost:3000/api/bookings/availability/${roomId}/${date}`);
+        const data = await response.json();
+
+        return data.bookedTimes || [];
+    } catch (error) {
+        console.error('Error checking availability:', error);
+        return [];
+    }
+}
+
+// update dropdown waktu berdasarkan ketersediaan
+async function updateTimeSlotAvailability() {
+    const roomId = document.getElementById('roomId').value;
+    const bookingDate = document.getElementById('bookingDate').value;
+    const durationSelect = document.getElementById('duration');
+
+    // Jika tanggal belum dipilih, reset semua option
+    if (!bookingDate) {
+        const options = durationSelect.querySelectorAll('option');
+        options.forEach(option => {
+            if (option.value) {
+                option.disabled = false;
+                // Reset ke text asli
+                const originalText = getBookingTimeText(option.value);
+                if (originalText) {
+                    option.textContent = originalText;
+                }
+            }
+        });
+        return;
+    }
+
+    console.log('Checking availability for room:', roomId, 'date:', bookingDate);
+
+    // Cek waktu yang sudah dibooking dari database
+    const bookedTimes = await checkAvailability(roomId, bookingDate);
+
+    console.log('Booked times:', bookedTimes);
+
+    // Update semua option di dropdown
+    const options = durationSelect.querySelectorAll('option');
+    options.forEach(option => {
+        if (option.value) {
+            const timeText = getBookingTimeText(option.value);
+
+            // Cek apakah waktu ini sudah dibooking
+            if (bookedTimes.includes(timeText)) {
+                option.disabled = true;
+                option.textContent = `${timeText} (Already Booked)`;
+                option.style.color = '#d32f2f';
+                option.style.backgroundColor = '#ffebee';
+                console.log('Disabling time slot:', timeText);
+            } else {
+                option.disabled = false;
+                option.textContent = timeText;
+                option.style.color = '';
+                option.style.backgroundColor = '';
+            }
+        }
+    });
+
+    // Reset pilihan jika yang dipilih sudah dibooking
+    if (durationSelect.value) {
+        const selectedOption = durationSelect.options[durationSelect.selectedIndex];
+        if (selectedOption.disabled) {
+            durationSelect.value = '';
+            alert('Waktu yang Anda pilih sudah dibooking. Silakan pilih waktu lain.');
+        }
+    }
 }
 
 // Fungsi untuk submit booking ke server
@@ -138,6 +211,13 @@ async function handleSubmit(event) {
             document.getElementById("unsuccessPopup").style.display = "none";
         };
 
+        return;
+    }
+
+    // Cek apakah waktu yang dipilih sudah dibooking
+    const selectedOption = duration.options[duration.selectedIndex];
+    if (selectedOption.disabled) {
+        alert('Waktu yang dipilih sudah dibooking. Silakan pilih waktu lain.');
         return;
     }
 
@@ -208,6 +288,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (bookingDate) {
         const today = new Date().toISOString().split("T")[0];
         bookingDate.setAttribute("min", today);
+
+        // Event listener untuk cek jam ruangan, saat tanggal berubah 
+        bookingDate.addEventListener("change", updateTimeSlotAvailability);
     }
 
     const cancelBtn = document.querySelector(".btn-cancel");

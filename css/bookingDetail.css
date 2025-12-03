@@ -14,6 +14,61 @@ body {
     align-items: center;
 }
 
+.main-header {
+    width: 100%;
+    background: white;
+    padding: 15px 25px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#app-logo {
+    width: 120px;
+    height: 50px;
+    object-fit: cover;
+}
+
+.header-nav {
+    display: flex;
+    gap: 120px;
+}
+
+.nav-link {
+    text-decoration: none;
+    font-size: 16px;
+    color: #444;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.nav-link:hover {
+    color: #3bb54a;
+}
+
+.header-right {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+#logout_icon {
+    width: 40px;
+}
+
 .container {
     width: 900px;
     background: white;
@@ -33,67 +88,6 @@ body {
     color: #555;
     margin-bottom: 20px;
     text-align: center;
-}
-
-.main-header {
-    width: 100%;
-    background: white;
-    padding: 15px 25px;
-    border-radius: 10px;
-    margin-bottom: 25px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-    font-family: Arial, sans-serif;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-#app-logo {
-    width: 120px;
-    height: 50px;
-    object-fit: cover;
-}
-
-.app-name {
-    font-size: 20px;
-    color: #333;
-}
-
-.header-nav {
-    display: flex;
-    gap: 120px;
-}
-
-.nav-link {
-    text-decoration: none;
-    font-size: 16px;
-    color: #444;
-    font-weight: 600;
-    transition: 0.2s;
-}
-
-.nav-link:hover {
-    color: #3bb54a;
-}
-
-#logout_icon {
-    width: 40px;
-}
-
-.header-right {
-    font-size: 16px;
-    font-weight: bold;
-    color: #333;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 30px;
 }
 
 .room-image {
@@ -149,12 +143,17 @@ body {
 }
 
 .info-box {
-    background: #fff4d6;
-    padding: 15px 20px;
-    border-left: 5px solid #f2b600;
-    border-radius: 8px;
-    margin-bottom: 25px;
-    color: #555;
+    background: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.info-box p {
+    margin: 0;
+    color: #856404;
+    font-size: 0.95rem;
 }
 
 .form-row {
@@ -189,21 +188,54 @@ body {
     transition: border-color 0.2s, box-shadow 0.2s;
 }
 
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #3bb54a;
+    box-shadow: 0 0 0 3px rgba(59, 181, 74, 0.1);
+}
+
 textarea {
     min-height: 90px;
     resize: vertical;
     font-family: Arial, sans-serif;
 }
 
+.form-group input.error,
+.form-group select.error,
+.form-group textarea.error {
+    border-color: #d32f2f;
+}
+
 .error-message {
-    font-size: 13px;
-    color: #e63946;
     display: none;
+    color: #d32f2f;
+    font-size: 13px;
     margin-top: 4px;
 }
 
 .error-message.show {
     display: block;
+}
+
+#duration {
+    cursor: pointer;
+}
+
+#duration option {
+    padding: 8px;
+    cursor: pointer;
+}
+
+/* css untuk option yang sudah di booking */
+select option:disabled {
+    color: #d32f2f !important;
+    background-color: #ffebee !important;
+    font-style: italic;
+    text-decoration: line-through;
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .button-group {
@@ -255,6 +287,7 @@ textarea {
     display: none;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 
 .popup-overlay.show {
@@ -267,22 +300,25 @@ textarea {
     border-radius: 12px;
     width: 350px;
     text-align: center;
-    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.3);
     animation: slideIn 0.3s ease;
 }
 
 .popup-box h2 {
     margin-bottom: 10px;
     color: #333;
+    font-size: 22px;
 }
 
 .popup-box h3 {
-    color: #FF5252;
+    color: #d32f2f;
+    font-size: 18px;
 }
 
 .popup-box p {
     color: #555;
     margin-bottom: 20px;
+    font-size: 15px;
 }
 
 #popupOkBtn {
@@ -297,10 +333,14 @@ textarea {
     transition: background-color 0.2s;
 }
 
+#popupOkBtn:hover {
+    background: #2d8c3a;
+}
+
 #unsuccessOkBtn {
     padding: 10px 25px;
     border: none;
-    background: #D32F2F;
+    background: #d32f2f;
     color: white;
     border-radius: 8px;
     cursor: pointer;
@@ -309,6 +349,6 @@ textarea {
     transition: background-color 0.2s;
 }
 
-.popup-box button:hover {
-    background: #2d8c3a;
+#unsuccessOkBtn:hover {
+    background: #b71c1c;
 }
