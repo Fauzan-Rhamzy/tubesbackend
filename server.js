@@ -20,7 +20,7 @@ server.on("request", async (request, response) => {
             try {
                 // Mengambil semua bookings
                 const bookingsResult = await db.query(
-                    'SELECT * FROM bookings ORDER BY created_at DESC'
+                    'SELECT * FROM bookings ORDER BY id ASC'
                 );
 
                 // Mengambil semua rooms dan users
