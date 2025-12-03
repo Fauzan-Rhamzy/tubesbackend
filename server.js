@@ -193,6 +193,24 @@ server.on("request", async (request, response) => {
             return;
         }
 
+        // GET bookings by user ID (riwayat user)
+        const userBookingMatch = url.match(/^\/api\/bookings\/user\/(\d+)$/);
+        if (userBookingMatch && method === 'GET') {
+            const userId = userBookingMatch[1];
+
+            const result = await db.query(`
+        SELECT bookings.*, rooms.name AS room_name, rooms.image_path
+        FROM bookings
+        LEFT JOIN rooms ON rooms.id = bookings.room_id
+        WHERE bookings.user_id = $1
+        ORDER BY bookings.booking_date DESC, bookings.booking_time ASC
+    `, [userId]);
+
+            response.writeHead(200, { "Content-Type": "application/json" });
+            response.end(JSON.stringify(result.rows));
+            return;
+        }
+
         // Jika API tidak ditemukan
         response.writeHead(404, { "Content-Type": "application/json" });
         response.end(JSON.stringify({ message: "API route not found" }));

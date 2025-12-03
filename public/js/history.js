@@ -16,7 +16,7 @@ async function fetchUserBookings() {
 
     try {
         const response = await fetch(`/api/bookings/user/${userId}`);
-        
+
         if (!response.ok) {
             throw new Error('Gagal mengambil data booking');
         }
@@ -72,7 +72,7 @@ function renderHistory(bookings) {
         let statusClass = "";
         let statusLabel = item.status;
 
-        switch(item.status) {
+        switch (item.status) {
             case 'confirmed':
                 statusClass = "status-approved";
                 statusLabel = "Approved";
@@ -86,7 +86,7 @@ function renderHistory(bookings) {
                 statusLabel = "Rejected";
                 break;
             case 'canceled':
-                statusClass = "status-rejected"; 
+                statusClass = "status-rejected";
                 statusLabel = "Canceled";
                 break;
             default:
@@ -107,16 +107,16 @@ function renderHistory(bookings) {
             <div class="history-card-content">
                 <div>
                     <div class="room-name">${item.room_name || 'Nama Ruangan Tidak Ditemukan'}</div>
-                    <div class="detail">Tanggal: ${formattedDate}</div>
-                    <div class="detail">Waktu: ${timeLabel}</div>
-                    <div class="detail">Tujuan: ${item.purpose}</div>
+                    <div class="detail">Date: ${formattedDate}</div>
+                    <div class="detail">Time: ${timeLabel}</div>
+                    <div class="detail">Purpose: ${item.purpose}</div>
                     <div class="status-booking">Status: ${statusLabel.toUpperCase()}</div>
 
 
                     <div style="margin-top:12px;">
                         ${showCancel ? `
                             <button class="btn-cancel-booking" onclick="cancelBooking(${item.id})">
-                                Batalkan Booking
+                                Cancel Booking
                             </button>
                         ` : ""}
                     </div>
