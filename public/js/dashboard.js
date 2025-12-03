@@ -6,7 +6,15 @@ document.addEventListener("DOMContentLoaded", () => {
     disableBookingButton();
 
     initUserDisplay();
+
+    const bookingButton = document.querySelector(".bookingButton");
+
+    bookingButton.addEventListener("click", handleBooking);
 });
+
+function handleBooking() {
+    window.location.href = "/booking";
+}
 
 // Fungsi untuk disable tombol booking
 function disableBookingButton() {

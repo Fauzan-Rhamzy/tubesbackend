@@ -87,7 +87,7 @@ function renderHistory() {
                     </div>
                 </div>
 
-                <img class="history-image" src="../images/ruang a/meetingroom-1.jpg" alt="Room Image">
+                <img class="history-image" src="../images/ruang-a/meetingroom-1.jpg" alt="Room Image">
 
             </div>
         `;
