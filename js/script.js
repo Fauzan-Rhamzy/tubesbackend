@@ -77,12 +77,49 @@ function validateInput(inputElement) {
     return true;
 }
 
-function handleSubmit(event) {
+// Fungsi untuk convert waktu booking dari option value ke format text
+function getBookingTimeText(timeValue) {
+    const timeMap = {
+        '1': '08.00 - 11.00',
+        '2': '11.00 - 13.00',
+        '3': '13.00 - 15.00',
+        '4': '15.00 - 18.00'
+    };
+    return timeMap[timeValue] || '';
+}
+
+// Fungsi untuk submit booking ke server
+async function submitBooking(bookingData) {
+    try {
+        const response = await fetch('http://localhost:3000/api/bookings', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(bookingData)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.message || 'Failed to create booking');
+        }
+
+        return { success: true, data: result };
+
+    } catch (error) {
+        console.error('Error submitting booking:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+async function handleSubmit(event) {
     event.preventDefault();
 
     const bookingDate = document.getElementById('bookingDate');
     const duration = document.getElementById('duration');
     const purpose = document.getElementById('purpose');
+    const roomId = document.getElementById('roomId');
 
     var isValid = true;
 
@@ -104,14 +141,39 @@ function handleSubmit(event) {
         return;
     }
 
-    // Menampilkan pop up
-    document.getElementById("successPopup").style.display = "flex";
+    // Ambil userId dari localStorage (disimpan saat login)
+    const userId = localStorage.getItem('userId');
 
-    // pindah halaman ke history.html
-    document.getElementById("popupOkBtn").onclick = function () {
-        window.location.href = "history.html";
+    if (!userId) {
+        alert('Session expired. Please login again.');
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Siapkan data booking
+    const bookingData = {
+        userId: parseInt(userId),
+        roomId: parseInt(roomId.value),
+        bookingDate: bookingDate.value,
+        bookingTime: getBookingTimeText(duration.value),
+        purpose: purpose.value.trim()
     };
 
+    // Submit booking ke server
+    const result = await submitBooking(bookingData);
+
+    if (result.success) {
+        // Menampilkan pop up sukses
+        document.getElementById("successPopup").style.display = "flex";
+
+        // pindah halaman ke history.html
+        document.getElementById("popupOkBtn").onclick = function () {
+            window.location.href = "history.html";
+        };
+    } else {
+        // Tampilkan error message
+        alert(`Booking failed: ${result.error}`);
+    }
 }
 
 function setupLiveValidation() {

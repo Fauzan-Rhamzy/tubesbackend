@@ -4,8 +4,9 @@
  */
 function checkAuth() {
     const username = localStorage.getItem("username");
+    const userId = localStorage.getItem("userId"); // Tambahkan cek userId
 
-    if (!username) {
+    if (!username || !userId) {
         window.location.href = "login.html";
         return false;
     }
@@ -33,8 +34,10 @@ function setupLogout() {
 
             // Hapus semua data user dari localStorage
             localStorage.removeItem("username");
+            localStorage.removeItem("userId"); // Hapus userId juga
             localStorage.removeItem("role");
             localStorage.removeItem("email");
+            localStorage.removeItem("selectedRoomId"); // Hapus selectedRoomId juga
 
             // Langsung redirect tanpa alert
             window.location.href = "login.html";

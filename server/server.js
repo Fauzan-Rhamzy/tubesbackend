@@ -54,6 +54,7 @@ const server = http.createServer(async (req, res) => {
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({
                     message: 'Login berhasil',
+                    userId: user.id, // Tambahkan userId untuk booking
                     username: user.username,
                     role: user.role // misal ada kolom role (admin/user)
                 }));
@@ -109,7 +110,88 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // 5. JIKA RUTE TIDAK DITEMUKAN
+    // 5. RUTE: CREATE BOOKING (POST /api/bookings)
+    else if (req.url === '/api/bookings' && req.method === 'POST') {
+        let body = '';
+
+        req.on('data', chunk => {
+            body += chunk.toString();
+        });
+
+        req.on('end', async () => {
+            try {
+                const { userId, roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
+
+                // Validasi input
+                if (!userId || !roomId || !bookingDate || !bookingTime || !purpose) {
+                    res.writeHead(400, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ message: 'Semua field harus diisi' }));
+                    return;
+                }
+
+                // Cek apakah ruangan sudah dibooking di tanggal dan waktu yang sama
+                const checkBooking = await db.query(
+                    'SELECT * FROM bookings WHERE room_id = $1 AND booking_date = $2 AND booking_time = $3 AND status != $4',
+                    [roomId, bookingDate, bookingTime, 'rejected']
+                );
+
+                if (checkBooking.rows.length > 0) {
+                    res.writeHead(409, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({
+                        message: 'Ruangan sudah dibooking pada tanggal dan waktu tersebut'
+                    }));
+                    return;
+                }
+
+                // Insert booking ke database
+                const result = await db.query(
+                    `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status) 
+                     VALUES ($1, $2, $3, $4, $5, $6) 
+                     RETURNING *`,
+                    [userId, roomId, bookingDate, bookingTime, purpose, 'pending']
+                );
+
+                // Booking berhasil
+                res.writeHead(201, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    message: 'Booking berhasil dibuat',
+                    booking: result.rows[0]
+                }));
+
+            } catch (error) {
+                console.error('Error creating booking:', error);
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Error membuat booking' }));
+            }
+        });
+    }
+
+    // 6. RUTE: GET USER BOOKINGS (GET /api/bookings/user/:userId)
+    else if (req.url.startsWith('/api/bookings/user/') && req.method === 'GET') {
+        try {
+            const userId = req.url.split('/')[4];
+
+            // Query semua booking milik user dengan join ke tabel rooms
+            const result = await db.query(
+                `SELECT b.*, r.name as room_name, r.image_path 
+                 FROM bookings b 
+                 JOIN rooms r ON b.room_id = r.id 
+                 WHERE b.user_id = $1 
+                 ORDER BY b.created_at DESC`,
+                [userId]
+            );
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(result.rows));
+
+        } catch (error) {
+            console.error('Error fetching user bookings:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Error mengambil data booking' }));
+        }
+    }
+
+    // 7. JIKA RUTE TIDAK DITEMUKAN
     else {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Halaman tidak ditemukan' }));
