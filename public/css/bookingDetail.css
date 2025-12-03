@@ -133,15 +133,6 @@ body {
     display: block;
 }
 
-.room-status p {
-    background: #2196F3;
-    color: white;
-    padding: 8px 15px;
-    border-radius: 6px;
-    font-weight: bold;
-    margin: 0;
-}
-
 .info-box {
     background: #fff3cd;
     border-left: 4px solid #ffc107;
@@ -228,7 +219,6 @@ textarea {
     cursor: pointer;
 }
 
-/* css untuk option yang sudah di booking */
 select option:disabled {
     color: #d32f2f !important;
     background-color: #ffebee !important;
