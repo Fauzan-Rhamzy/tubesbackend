@@ -25,17 +25,12 @@ const bookingHistory = [
     }
 ];
 
-// Load username & logout
+// Initialize page
 document.addEventListener("DOMContentLoaded", () => {
-    let username = localStorage.getItem("username") || "User";
-    document.getElementById("usernameDisplay").textContent = "Hi, " + username + "!";
+    // Load username & setup logout (dari userDisplay.js)
+    initUserDisplay();
 
-    document.getElementById("logoutButton").addEventListener("click", function (e) {
-        e.preventDefault();
-        localStorage.removeItem("username");
-        window.location.href = "login.html";
-    });
-
+    // Render booking history
     renderHistory();
 });
 
@@ -46,7 +41,7 @@ function cancelBooking(id) {
 
     const index = bookingHistory.findIndex(item => item.id === id);
     if (index !== -1) {
-        bookingHistory[index].status = "cancelled_by_user"; 
+        bookingHistory[index].status = "cancelled_by_user";
         alert("Booking berhasil dibatalkan!");
         renderHistory();
     }
@@ -81,7 +76,7 @@ function renderHistory() {
 
                     <div style="margin-top:12px;">
                         <span class="status ${statusClass}">
-                            ${item.status.toUpperCase().replace("_BY_USER","")}
+                            ${item.status.toUpperCase().replace("_BY_USER", "")}
                         </span>
 
                         ${showCancel ? `

@@ -248,7 +248,7 @@ async function handleSubmit(event) {
 
         // pindah halaman ke history.html
         document.getElementById("popupOkBtn").onclick = function () {
-            window.location.href = "history.html";
+            window.location.href = "/history";
         };
     } else {
         // Tampilkan error message
@@ -296,8 +296,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const cancelBtn = document.querySelector(".btn-cancel");
     if (cancelBtn) {
         cancelBtn.addEventListener("click", () => {
-            window.location.href = "dashboard.html";
+            window.location.href = "/dashboard";
         });
     }
 
+    initUserDisplay();
 });

@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Set tombol booking disabled di awal
     disableBookingButton();
+
+    initUserDisplay();
 });
 
 // Fungsi untuk disable tombol booking
