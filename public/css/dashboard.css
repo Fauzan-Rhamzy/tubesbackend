@@ -1,3 +1,16 @@
+.bookingButton.disabled {
+    background-color: #ccc;
+    color: #666;
+}
+
+.chooseRoomTitle {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 22px;
+    font-weight: bold;
+    color: #333;
+}
+
 .dashboardContainer {
     margin-top: 1rem;
 }
@@ -68,57 +81,13 @@
 
 .room-option-card img {
     margin-top: 1rem;
-    max-height: 100%;
-    max-width: 100%;
+    height: 150px;
+    width: 100%;
+    object-fit: cover;
 }
 
 .room-options-container>.active {
     background: #eef2f7;
     border: 1px solid black;
     border-bottom: 0;
-}
-
-.timeslot-container {
-    padding: 10px;
-    background: #eef2f7;
-    border-radius: 10px;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    border: 1px solid black;
-    border-top: 0;
-}
-
-.timeslot-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 15px;
-}
-
-.timeslot {
-    padding: 15px;
-    border-radius: 8px;
-    text-align: center;
-    font-weight: bold;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    min-height: 80px;
-}
-
-.timeslot .time {
-    font-size: 1.1em;
-    margin-bottom: 5px;
-}
-
-.timeslot.available {
-    background-color: #e6ffe6;
-    border: 1px solid #38a169;
-    color: #38a169;
-}
-
-.timeslot.booked {
-    background-color: #f0f0f0;
-    border: 1px solid #ccc;
-    color: #999;
 }

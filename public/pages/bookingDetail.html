@@ -7,6 +7,7 @@
     <title>Form Booking Ruangan</title>
     <link rel="stylesheet" href="../css/bookingDetail.css">
     <script src="../js/script.js"></script>
+    <script src="../js/auth.js"></script>
 </head>
 
 <body>
@@ -16,89 +17,92 @@
         </div>
 
         <nav class="header-nav">
-            <a href="dashboard.html" class="nav-link">Dashboard</a>
-            <a href="history.html" class="nav-link">History</a>
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <a href="/history" class="nav-link">History</a>
         </nav>
 
         <div class="header-right">
             <span id="usernameDisplay">Hi, User!</span>
-            <a href="login.html" id="logoutButton" class="nav-link logout"><img id="logout_icon"
+            <a href="/login" id="logoutButton" class="nav-link logout"><img id="logout_icon"
                     src="../images/logout_icon.png" alt=""></a>
         </div>
     </header>
 
     <div class="container">
         <div class="header">
-            <h1>Form Booking Ruangan</h1>
-            <p>Isi detail booking untuk melakukan pemesanan ruangan</p>
+            <h1>Room Reservation Form</h1>
+            <p>Fill in the booking details to reserve the room</p>
         </div>
 
         <div class="room-image">
-            <img src="../images/ruang-a/Meeting-Room-GST.webp">
+            <!-- Image akan diisi otomatis dari js -->
+            <img src="" alt="Room Image">
         </div>
 
+        <!-- bagian ini akan diisi secara otomatis dari js -->
         <div class="room-info">
             <div>
-                <span class="room-name">Ruangan Pilihan: Meeting Room A</span>
-                <span class="room-capacity">Kapasitas: 10 orang</span>
+                <span class="room-name"></span>
+                <span class="room-capacity"></span>
             </div>
             <div class="room-status">
-                <p>Tersedia</p>
+                <p></p>
             </div>
         </div>
 
         <form id="bookingForm">
             <input type="hidden" id="roomId" name="roomId" value="1">
             <div class="info-box">
-                <p>Pastikan Anda memilih tanggal dan waktu yang tersedia. Booking akan dikonfirmasi oleh admin.</p>
+                <p>Make sure you select an available date and time. Your booking will be confirmed by the admin.</p>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label for="bookingDate">Tanggal Booking *</label>
+                    <label for="bookingDate">Booking Date*</label>
                     <input type="date" id="bookingDate" required>
                     <!-- error message jika user belum memilih tanggal booking-->
-                    <span class="error-message">Pilih tanggal booking</span>
+                    <span class="error-message">Select Booking Date</span>
                 </div>
 
                 <div class="form-group">
-                    <label for="duration">Jam Booking*</label>
+                    <label for="duration">Booking Time*</label>
                     <select id="duration" name="duration" required>
-                        <option value="">--Pilih Jam Booking--</option>
+                        <option value="">--Select Booking Time--</option>
                         <option value="1">08.00 - 11.00</option>
                         <option value="2">11.00 - 13.00</option>
                         <option value="3">13.00 - 15.00</option>
                         <option value="4">15.00 - 18.00</option>
                     </select>
                     <!-- error message jika user belum memilih durasi booking-->
-                    <span class="error-message">Pilih jam booking</span>
+                    <span class="error-message">Select Booking Time</span>
                 </div>
             </div>
             <div class="form-group">
-                <label for="purpose">Tujuan penggunaan *</label>
-                <textarea id="purpose" name="purpose" placeholder="Jelaskan tujuan penggunaan ruangan"></textarea>
+                <label for="purpose">Purpose of Use *</label>
+                <textarea id="purpose" name="purpose"
+                    placeholder="Describe the purpose of using the room here"></textarea>
                 <!-- error message jika user belum memasukkan tujuan penggunaan-->
-                <span class="error-message">Jelaskan tujuan penggunaan</span>
+                <span class="error-message">Please describe the purpose of using the room</span>
             </div>
 
             <div class="button-group">
-                <button type="button" class="btn-cancel">Batal</button>
-                <button type="button" class="btn-submit">Lanjutkan Booking</button>
+                <button type="button" class="btn-cancel">Cancel</button>
+                <button type="button" class="btn-submit">Continue Booking</button>
             </div>
         </form>
     </div>
 
     <div id="successPopup" class="popup-overlay">
         <div class="popup-box">
-            <h2>Booking berhasil</h2>
-            <p>Data akan dikirim ke server.</p>
+            <h2>Booking successful</h2>
+            <p>Your data will be sent to the server.</p>
             <button id="popupOkBtn">OK</button>
         </div>
     </div>
 
     <div id="unsuccessPopup" class="popup-overlay">
         <div class="popup-box">
-            <h3>Silahkan lengkapi semua data yang diperlukan!</h3>
+            <h3>Please complete all required information!</h3>
             <br>
             <button id="unsuccessOkBtn">OK</button>
         </div>

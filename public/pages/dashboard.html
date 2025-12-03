@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="../css/bookingDetail.css">
     <link rel="stylesheet" href="../css/dashboard.css">
     <script src="../js/dashboard.js"></script>
+    <script src="../js/auth.js"></script>
 </head>
 
 <body>
@@ -17,13 +18,13 @@
         </div>
 
         <nav class="header-nav">
-            <a href="dashboard.html" class="nav-link">Dashboard</a>
-            <a href="history.html" class="nav-link">History</a>
+            <a href="/dashboard" class="nav-link">Dashboard</a>
+            <a href="/history" class="nav-link">History</a>
         </nav>
 
         <div class="header-right">
             <span id="usernameDisplay">Hi, User!</span>
-            <a href="login.html" id="logoutButton" class="nav-link logout"><img id="logout_icon"
+            <a href="/login" id="logoutButton" class="nav-link logout"><img id="logout_icon"
                     src="../images/logout_icon.png" alt=""></a>
         </div>
     </header>
@@ -31,58 +32,14 @@
     <div class="container">
         <div class="dashboardHeader">
             <h1>Dashboard</h1>
-            <a class="bookingButton" href="bookingDetail.html">Booking</a>
+            <a class="bookingButton" href="/booking">Booking</a>
         </div>
 
         <div class="dashboardContainer">
-            <div class="dateContainer">
-                <div class="form-group">
-                    <input type="date" class="dashboardDate" required>
-                </div>
-            </div>
-
-            <div class="room-options-container">
-                <div class="room-option-card">
-                    <h3>Meeting Room A</h3>
-                    <img src="../images/ruang-a/Meeting-Room-GST.webp">
-                    <p>Kapasitas: 10 orang</p>
-                </div>
-
-                <div class="room-option-card ">
-                    <h3>Ruang Konferensi B</h3>
-                    <img src="../images/ruang-a/194_1510807301.67.lg.png">
-                    <p>Kapasitas: 25 orang</p>
-                </div>
-
-                <div class="room-option-card active">
-                    <h3>Ruang Diskusi C</h3>
-                    <img src="../images/ruang-a/meja-miting-kantor-ELSINTA-revisi-copy.jpg">
-                    <p>Kapasitas: 5 orang</p>
-                </div>
-            </div>
-
-            <div class="timeslot-container">
-                <div class="timeslot-grid">
-                    <div class="timeslot booked">
-                        <span class="time">8:00 - 11:00</span>
-                        <span class="status-label">Dibooking</span>
-                    </div>
-                    <div class="timeslot available">
-                        <span class="time">11:00 - 13:00</span>
-                        <span class="status-label">Tersedia</span>
-                    </div>
-                    <div class="timeslot available">
-                        <span class="time">13:00 - 15:00</span>
-                        <span class="status-label">Tersedia</span>
-                    </div>
-                    <div class="timeslot booked">
-                        <span class="time">15:00 - 18:00</span>
-                        <span class="status-label">Dibooking</span>
-                    </div>
-                </div>
-            </div>
-
+            <p class="chooseRoomTitle">Choose one of these rooms</p>
+            <div class="room-options-container"></div>
         </div>
+    </div>
 </body>
 
 </html>
