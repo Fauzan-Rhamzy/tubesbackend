@@ -96,8 +96,39 @@ function getBookingTimeText(timeValue) {
     return timeMap[timeValue] || '';
 }
 
+// Fungsi untuk cek apakah waktu sudah lewat (untuk hari ini)
+function isTimePassed(timeValue) {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    // Mapping waktu mulai setiap slot (dalam menit dari midnight)
+    const timeSlotStart = {
+        '1': 8 * 60,      // 08:00
+        '2': 11 * 60,     // 11:00
+        '3': 13 * 60,     // 13:00
+        '4': 15 * 60      // 15:00
+    };
+
+    const slotStartTime = timeSlotStart[timeValue];
+
+    // Waktu dianggap sudah lewat jika waktu sekarang sudah melewati waktu mulai slot
+    return currentTimeInMinutes >= slotStartTime;
+}
+
+// Fungsi untuk cek apakah tanggal yang dipilih adalah hari ini
+function isToday(dateString) {
+    const selectedDate = new Date(dateString);
+    const today = new Date();
+
+    return selectedDate.getDate() === today.getDate() &&
+        selectedDate.getMonth() === today.getMonth() &&
+        selectedDate.getFullYear() === today.getFullYear();
+}
+
 // Cek ketersediaan waktu booking dari server
-// HANYA booking dengan status 'pending' atau 'approved' yang dianggap "booked"
+// HANYA booking dengan status 'pending' atau 'confirmed' yang dianggap "booked"
 async function checkAvailability(roomId, date) {
     try {
         const response = await fetch(`http://localhost:3000/api/bookings/availability/${roomId}/${date}`);
@@ -143,23 +174,39 @@ async function updateTimeSlotAvailability() {
 
     console.log('Checking availability for room:', roomId, 'date:', bookingDate);
 
+    // Cek apakah tanggal yang dipilih adalah hari ini
+    const isTodaySelected = isToday(bookingDate);
+
     // Cek waktu yang sudah dibooking dari database
     // Hanya yang status != 'rejected' dan != 'cancelled'
     const bookedTimes = await checkAvailability(roomId, bookingDate);
 
     console.log('Booked times (active only):', bookedTimes);
+    console.log('Is today selected:', isTodaySelected);
 
     // Update semua option di dropdown
     const options = durationSelect.querySelectorAll('option');
     options.forEach(option => {
         if (option.value) {
             const timeText = getBookingTimeText(option.value);
+            let isDisabled = false;
+            let disableReason = '';
 
             // Cek apakah waktu ini sudah dibooking (status aktif)
             if (bookedTimes.includes(timeText)) {
+                isDisabled = true;
+                disableReason = '(Already Booked)';
+            }
+            // Cek apakah waktu sudah lewat (khusus untuk hari ini)
+            else if (isTodaySelected && isTimePassed(option.value)) {
+                isDisabled = true;
+                disableReason = '(Time Passed)';
+            }
+
+            if (isDisabled) {
                 option.disabled = true;
-                option.textContent = `${timeText} (Already Booked)`;
-                console.log('Disabling time slot:', timeText);
+                option.textContent = `${timeText} ${disableReason}`;
+                console.log('Disabling time slot:', timeText, disableReason);
             } else {
                 option.disabled = false;
                 option.textContent = timeText;
@@ -167,12 +214,18 @@ async function updateTimeSlotAvailability() {
         }
     });
 
-    // Reset pilihan jika yang dipilih sudah dibooking
+    // Reset pilihan jika yang dipilih sudah dibooking atau waktu sudah lewat
     if (durationSelect.value) {
         const selectedOption = durationSelect.options[durationSelect.selectedIndex];
         if (selectedOption.disabled) {
             durationSelect.value = '';
-            alert('The time you selected is already booked. Please choose another time.');
+
+            // Cek alasan disabled
+            if (isTodaySelected && isTimePassed(selectedOption.value)) {
+                alert('The selected time has passed. Please choose another time.');
+            } else {
+                alert('The time you selected is already booked. Please choose another time.');
+            }
         }
     }
 }
@@ -235,10 +288,16 @@ async function handleSubmit(event) {
         return;
     }
 
-    // Cek apakah waktu yang dipilih sudah dibooking
+    // Cek apakah waktu yang dipilih sudah dibooking atau sudah lewat
     const selectedOption = duration.options[duration.selectedIndex];
     if (selectedOption.disabled) {
-        alert('The selected time is already booked. Please choose another time.');
+        alert('The selected time is not available. Please choose another time.');
+        return;
+    }
+
+    // Validasi tambahan: cek jika hari ini dan waktu sudah lewat
+    if (isToday(bookingDate.value) && isTimePassed(duration.value)) {
+        alert('Cannot book a time that has already passed today. Please choose another time.');
         return;
     }
 
@@ -321,6 +380,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Event listener untuk cek ketersediaan saat tanggal berubah
         bookingDate.addEventListener("change", updateTimeSlotAvailability);
+    }
+
+    // Setup duration select untuk update availability saat pertama kali load
+    const durationSelect = document.getElementById("duration");
+    if (durationSelect) {
+        // Jika ada tanggal yang sudah dipilih, update availability
+        if (bookingDate && bookingDate.value) {
+            updateTimeSlotAvailability();
+        }
     }
 
     // Setup cancel button
