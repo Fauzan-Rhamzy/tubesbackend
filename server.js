@@ -305,7 +305,10 @@ server.on("request", async (request, response) => {
                         return;
                     }
 
-                    response.writeHead(200, { 'Content-Type': 'application/json' });
+                    response.writeHead(200, { 
+                        'Content-Type': 'application/json',
+                        'set-cookie': `userId=${user.id}; HttpOnly; Path=/`
+                    });
                     response.end(JSON.stringify({
                         message: 'Login berhasil',
                         userId: user.id,
@@ -355,18 +358,40 @@ server.on("request", async (request, response) => {
     // Handle static files
     let folder = "./public";
     let fileName = url;
+    const cookies = request.headers.cookie || "";
+    console.log(cookies);
+    const isLoggedIn = cookies.includes("userId=");
 
+    // const cookie = request.headers.cookie;
     if (url === "/" || url === "/login") {
-        fileName = "/pages/login.html";
-    } else if (url === "/dashboard") {
-        fileName = "/pages/dashboard.html";
-    } else if (url === "/admin") {
-        fileName = "/pages/admin_page.html";
-    } else if (url === "/history") {
+        if (!cookies) 
+            fileName = "/pages/login.html";
+        else if (cookies.includes("role=admin")) 
+            fileName ="/pages/admin_page.html";
+        else if (cookies.includes("role=user"))
+            fileName = "/pages/dashboard.html";
+        else 
+            fileName = "/pages/login.html";
+    } 
+    else if (url === "/dashboard") {
+        if (!isLoggedIn) 
+            fileName="/pages/login.html"
+        else if (cookies.includes("role=admin"))
+            fileName="/pages/admin_page.html"
+        else if (!cookies.includes("role=user")) 
+            fileName = "/pages/dashboard.html";
+    } 
+    else if (url === "/admin") {
+        if (cookies.includes("role=admin"))
+            fileName = "/pages/admin_page.html";
+    } 
+    else if (url === "/history") {
         fileName = "/pages/history.html";
-    } else if (url === "/booking") {
+    } 
+    else if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
-    } else {
+    } 
+    else {
         fileName = url;
     }
 
@@ -385,9 +410,17 @@ server.on("request", async (request, response) => {
 
     const contentType = mimeTypes[fileExtension] || "text/plain";
 
-    console.log("URL dari Browser:", url);
-    console.log("Server mencari di:", filePath);
+    // console.log("URL dari Browser:", url);
+    // console.log("Server mencari di:", filePath);
+    // console.log(cookie)
 
+
+    // if (!isLoggedIn && (url === "/dashboard" || url === "/admin")) {
+    //     response.writeHead(302, {
+    //         location: "/login"
+    //     })
+    //     return response.end();
+    // }
     fs.readFile(filePath, (err, content) => {
         if (err) {
             response.writeHead(404);

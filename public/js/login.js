@@ -15,7 +15,8 @@ document.getElementById("loginForm").addEventListener("submit", async function (
         const response = await fetch('http://localhost:3000/api/login', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'userId':localStorage.getItem('userId')
             },
             body: JSON.stringify({ email, password })
         });
@@ -27,14 +28,15 @@ document.getElementById("loginForm").addEventListener("submit", async function (
             console.log("Login sukses:", data);
 
             // Menyimpan info user (username, role, email, userId)
-            localStorage.setItem("userId", data.userId);
-            localStorage.setItem("username", data.username);
-            localStorage.setItem("role", data.role);
-            localStorage.setItem("email", email);
+            // localStorage.setItem("userId", data.userId);
+            // localStorage.setItem("username", data.username);
+            // localStorage.setItem("role", data.role);
+            // localStorage.setItem("email", email);
+            document.cookie = `role=${data.role}; Path=/`
 
             // Pindah halaman
             if (data.role === 'admin') {
-                window.location.href = "/admin_page";
+                window.location.href = "/admin";
             } else {
                 window.location.href = "/dashboard";
             }
