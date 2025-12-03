@@ -110,12 +110,10 @@ function renderHistory(bookings) {
                     <div class="detail">Tanggal: ${formattedDate}</div>
                     <div class="detail">Waktu: ${timeLabel}</div>
                     <div class="detail">Tujuan: ${item.purpose}</div>
+                    <div class="status-booking">Status: ${statusLabel.toUpperCase()}</div>
+
 
                     <div style="margin-top:12px;">
-                        <span class="status ${statusClass}">
-                            ${statusLabel}
-                        </span>
-
                         ${showCancel ? `
                             <button class="btn-cancel-booking" onclick="cancelBooking(${item.id})">
                                 Batalkan Booking
