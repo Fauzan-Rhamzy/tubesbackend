@@ -1,5 +1,3 @@
-// public/js/dashboard.js
-
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. Tampilkan nama user & setup logout
     if (typeof initUserDisplay === 'function') {
@@ -8,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // 2. Cek session server (Cookie)
     try {
-        const response = await fetch('/api/my-bookings'); 
+        const response = await fetch('/api/my-bookings');
         if (response.status === 401) {
             alert('Sesi habis, silakan login kembali.');
             window.location.href = '/login';
@@ -19,14 +17,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // 3. Load data ruangan
-    loadRooms(); 
+    loadRooms();
 });
 
 async function loadRooms() {
     try {
         const response = await fetch('/api/rooms');
         if (!response.ok) throw new Error("Gagal mengambil data ruangan");
-        
+
         const rooms = await response.json();
         renderRooms(rooms);
     } catch (error) {
@@ -37,18 +35,16 @@ async function loadRooms() {
 
 function renderRooms(rooms) {
     const container = document.querySelector(".room-options-container");
-    container.innerHTML = ""; 
+    container.innerHTML = "";
 
     rooms.forEach(room => {
         const card = document.createElement("div");
-        // PERBAIKAN: Menggunakan class 'room-option-card' sesuai CSS kamu
-        card.classList.add("room-option-card"); 
-        
+        card.classList.add("room-option-card");
+
         // Cek selection dari localStorage
         const selectedId = localStorage.getItem("selectedRoomId");
         if (selectedId && parseInt(selectedId) === room.id) {
-            // PERBAIKAN: Menggunakan class 'active' sesuai CSS kamu
-            card.classList.add("active"); 
+            card.classList.add("active");
             enableBookingButton(true);
         }
 
@@ -56,7 +52,7 @@ function renderRooms(rooms) {
             selectRoom(room.id);
         });
 
-        // Pastikan path gambar benar
+        // Memastikan bawah path gambar benar
         const imagePath = room.image_path ? room.image_path : '../images/ruang-a/meetingroom-1.jpg';
 
         card.innerHTML = `
@@ -72,15 +68,8 @@ function renderRooms(rooms) {
 function selectRoom(roomId) {
     localStorage.setItem("selectedRoomId", roomId);
 
-    // Update UI: Hapus class active dari semua card, tambah ke yang dipilih
-    const cards = document.querySelectorAll(".room-option-card"); // PERBAIKAN selector
-    const roomsData = JSON.parse(localStorage.getItem('roomsData') || '[]'); // Opsional jika mau simpan data
-
-    // Cara paling aman refresh tampilan agar class 'active' pindah
-    // Kita panggil ulang renderRooms atau manipulasi manual DOM
-    // Di sini kita reload halaman atau panggil loadRooms() lagi biar simpel
     loadRooms();
-    
+
     // Aktifkan tombol
     enableBookingButton(true);
 }

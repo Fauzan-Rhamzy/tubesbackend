@@ -1,5 +1,3 @@
-// public/js/script.js
-
 // Fungsi untuk load detail ruangan yang dipilih dari dashboard
 async function loadSelectedRoom() {
     try {
@@ -11,7 +9,7 @@ async function loadSelectedRoom() {
             return;
         }
 
-        // Gunakan relative path
+        // fetch dari api 
         const response = await fetch(`/api/rooms/${selectedRoomId}`);
 
         if (!response.ok) {
@@ -39,7 +37,7 @@ function updateRoomDisplay(room) {
         // Handle gambar default jika kosong
         roomImage.src = room.image_path ? room.image_path : '../images/ruang-a/meetingroom-1.jpg';
         roomImage.alt = room.name;
-        roomImage.onerror = function() { this.src = '../images/ruang-a/meetingroom-1.jpg'; };
+        roomImage.onerror = function () { this.src = '../images/ruang-a/meetingroom-1.jpg'; };
     }
 
     const roomName = document.querySelector('.room-name');
@@ -53,13 +51,14 @@ function updateRoomDisplay(room) {
     }
 }
 
-// Helper functions untuk validasi UI
+// untuk showerror
 function showError(inputElement) {
     const errorMessage = inputElement.parentElement.querySelector('.error-message');
     if (errorMessage) errorMessage.classList.add('show');
     inputElement.classList.add('error');
 }
 
+// untuk hideerror
 function hideError(inputElement) {
     const errorMessage = inputElement.parentElement.querySelector('.error-message');
     if (errorMessage) errorMessage.classList.remove('show');
@@ -177,7 +176,7 @@ async function submitBooking(bookingData) {
     }
 }
 
-// Handler Utama Submit
+// Handler Submit
 async function handleSubmit(event) {
     event.preventDefault();
 
@@ -193,7 +192,7 @@ async function handleSubmit(event) {
 
     if (!isValid) {
         const unsuccessPopup = document.getElementById("unsuccessPopup");
-        if(unsuccessPopup) {
+        if (unsuccessPopup) {
             unsuccessPopup.classList.add('show');
             document.getElementById("unsuccessOkBtn").onclick = function () {
                 unsuccessPopup.classList.remove('show');
@@ -210,11 +209,7 @@ async function handleSubmit(event) {
         return;
     }
 
-    // [PERUBAHAN PENTING] 
-    // Hapus pengecekan localStorage 'userId'. Server akan baca dari Cookie.
-    
     const bookingData = {
-        // userId tidak perlu dikirim, server ambil otomatis dari cookie
         roomId: parseInt(roomId.value),
         bookingDate: bookingDate.value,
         bookingTime: getBookingTimeText(duration.value),
