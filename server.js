@@ -14,19 +14,17 @@ server.on("request", async (request, response) => {
 
     // handle API requests
     if (url.startsWith('/api')) {
-        // GET all bookings (TANPA JOIN)
         if (url === '/api/bookings' && method === 'GET') {
             try {
-                // Ambil semua bookings
+                // Mengambil semua bookings
                 const bookingsResult = await db.query(
                     'SELECT * FROM bookings ORDER BY created_at DESC'
                 );
 
-                // Ambil semua rooms dan users
+                // Mengambil semua rooms dan users
                 const roomsResult = await db.query('SELECT * FROM rooms');
                 const usersResult = await db.query('SELECT id, username FROM users');
 
-                // Buat mapping untuk lookup cepat
                 const roomsMap = {};
                 roomsResult.rows.forEach(room => {
                     roomsMap[room.id] = room;
@@ -37,7 +35,7 @@ server.on("request", async (request, response) => {
                     usersMap[user.id] = user;
                 });
 
-                // Gabungkan data manual
+                // Menggabungkan data
                 const bookings = bookingsResult.rows.map(booking => {
                     const room = roomsMap[booking.room_id] || {};
                     const user = usersMap[booking.user_id] || {};
@@ -76,8 +74,7 @@ server.on("request", async (request, response) => {
                         return;
                     }
 
-                    // Cek apakah ruangan sudah dibooking dengan status aktif
-                    // Hanya cek booking dengan status 'pending' atau 'approved'
+                    // Cek apakah ruangan sudah dibooking dengan status aktif (pending / approved)
                     const checkBooking = await db.query(
                         `SELECT * FROM bookings 
                          WHERE room_id = $1 AND booking_date = $2 AND booking_time = $3 
@@ -116,12 +113,12 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET user bookings (TANPA JOIN)
+        // GET user bookings
         if (url.startsWith('/api/bookings/user/') && method === 'GET') {
             try {
                 const userId = url.split('/')[4];
 
-                // Ambil bookings user
+                // Mengambil bookings user
                 const bookingsResult = await db.query(
                     'SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC',
                     [userId]
@@ -140,7 +137,7 @@ server.on("request", async (request, response) => {
                     roomsMap[room.id] = room;
                 });
 
-                // Gabungkan data
+                // Menggabungkan data
                 const bookings = bookingsResult.rows.map(booking => {
                     const room = roomsMap[booking.room_id] || {};
                     return {
@@ -219,7 +216,6 @@ server.on("request", async (request, response) => {
                 const roomId = parts[4];
                 const date = parts[5];
 
-                // Hanya ambil booking dengan status 'pending' atau 'approved'
                 // Booking dengan status 'rejected' atau 'cancelled' tidak dianggap "booked"
                 const result = await db.query(
                     `SELECT booking_time FROM bookings 
