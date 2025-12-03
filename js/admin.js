@@ -1,55 +1,52 @@
-document.addEventListener('DOMContentLoaded', () => {
+async function loadBookings() {
+    const res = await fetch("http://localhost:3000/api/bookings");
+    const data = await res.json();
+    const tbody = document.getElementById("adminBookingTableBody");
 
-    // ngambil semua action button
-    const actionButtons = document.querySelectorAll('.action-buttons .btn');
+    tbody.innerHTML = "";
 
-    // untuk setiap button ditempelin event listener
-    actionButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            // kalau buttonnya disabled
-            if (button.disabled) {
-                return;
-            }
+    data.forEach(item => {
+        let statusClass = {
+            pending: "status-pending",
+            waiting: "status-pending",
+            approved: "status-approved",
+            rejected: "status-rejected",
+            cancelled_by_user: "status-canceled"
+        }[item.status];
 
-            let actionText = '';
-            if (button.classList.contains('btn-approve')) {
-                actionText = 'approve';
-            } else if (button.classList.contains('btn-reject')) {
-                actionText = 'reject';
-            } else if (button.classList.contains('btn-cancel')) {
-                actionText = 'cancel';
-            }
+        tbody.innerHTML += `
+            <tr>
+                <td>${item.id}</td>
+                <td>${item.username}</td>
+                <td>${item.room_name}</td>
+                <td>${item.booking_date.split("T")[0]}</td>
+                <td>${item.booking_time}</td>
+                <td>${item.purpose}</td>
+                <td><span class="${statusClass}">${item.status}</span></td>
 
-            const isConfirmed = confirm(`Are you sure you want to ${actionText} this booking?`);
-
-            if (isConfirmed) {
-                const row = button.closest('tr');
-                const statusCell = row.querySelector('.status');
-                
-                let newStatus = '';
-                let newStatusClass = '';
-
-                // update status sesuai dengan button yang ditekan
-                if (actionText === 'approve') {
-                    newStatus = 'Approved';
-                    newStatusClass = 'status-approved';
-                } else if (actionText === 'reject') {
-                    newStatus = 'Rejected';
-                    newStatusClass = 'status-rejected';
-                } else if (actionText === 'cancel') {
-                    newStatus = 'Canceled';
-                    newStatusClass = 'status-canceled';
-                }
-
-                // update status
-                statusCell.innerHTML = `<span class="${newStatusClass}">${newStatus}</span>`;
-
-                // tombol yang sudah ditekan di disable
-                button.disabled = true;
-
-                alert(`Booking has been ${newStatus.toLowerCase()}.`);
-            }
-        });
+                <td>
+                    <button class="btn btn-approve" onclick="approve(${item.id})" ${item.status === "approved" ? "disabled" : ""}>Approve</button>
+                    <button class="btn btn-reject" onclick="reject(${item.id})" ${item.status === "rejected" ? "disabled" : ""}>Reject</button>
+                    <button class="btn btn-cancel" onclick="cancel(${item.id})" ${item.status === "cancelled_by_user" || item.status === "rejected" ? "disabled" : ""}>Cancel</button>
+                </td>
+            </tr>
+        `;
     });
+}
 
-});
+async function approve(id) {
+    await fetch(`http://localhost:3000/api/bookings/approve/${id}`, { method: "PATCH" });
+    loadBookings();
+}
+
+async function reject(id) {
+    await fetch(`http://localhost:3000/api/bookings/reject/${id}`, { method: "PATCH" });
+    loadBookings();
+}
+
+async function cancel(id) {
+    await fetch(`http://localhost:3000/api/bookings/cancel/${id}`, { method: "PATCH" });
+    loadBookings();
+}
+
+document.addEventListener("DOMContentLoaded", loadBookings);

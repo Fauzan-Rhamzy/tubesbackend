@@ -110,61 +110,64 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // 5. RUTE: CREATE BOOKING (POST /api/bookings)
-    else if (req.url === '/api/bookings' && req.method === 'POST') {
-        let body = '';
+   // 5. RUTE: CREATE BOOKING (POST /api/bookings)
+else if (req.url === '/api/bookings' && req.method === 'POST') {
+    let body = '';
 
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
+    req.on('data', chunk => {
+        body += chunk.toString();
+    });
 
-        req.on('end', async () => {
-            try {
-                const { userId, roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
+    req.on('end', async () => {
+        try {
+            const { userId, roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
 
-                // Validasi input
-                if (!userId || !roomId || !bookingDate || !bookingTime || !purpose) {
-                    res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ message: 'Semua field harus diisi' }));
-                    return;
-                }
-
-                // Cek apakah ruangan sudah dibooking di tanggal dan waktu yang sama
-                const checkBooking = await db.query(
-                    'SELECT * FROM bookings WHERE room_id = $1 AND booking_date = $2 AND booking_time = $3 AND status != $4',
-                    [roomId, bookingDate, bookingTime, 'rejected']
-                );
-
-                if (checkBooking.rows.length > 0) {
-                    res.writeHead(409, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({
-                        message: 'Ruangan sudah dibooking pada tanggal dan waktu tersebut'
-                    }));
-                    return;
-                }
-
-                // Insert booking ke database
-                const result = await db.query(
-                    `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status) 
-                     VALUES ($1, $2, $3, $4, $5, $6) 
-                     RETURNING *`,
-                    [userId, roomId, bookingDate, bookingTime, purpose, 'pending']
-                );
-
-                // Booking berhasil
-                res.writeHead(201, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({
-                    message: 'Booking berhasil dibuat',
-                    booking: result.rows[0]
-                }));
-
-            } catch (error) {
-                console.error('Error creating booking:', error);
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ message: 'Error membuat booking' }));
+            // Validasi input
+            if (!userId || !roomId || !bookingDate || !bookingTime || !purpose) {
+                res.writeHead(400, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Semua field harus diisi' }));
+                return;
             }
-        });
-    }
+
+            // CEK BENTROK BOOKING RUANGAN
+            const checkBooking = await db.query(
+                `SELECT * FROM bookings 
+                 WHERE room_id = $1 
+                 AND booking_date = $2 
+                 AND booking_time = $3 
+                 AND status != $4`,
+                [roomId, bookingDate, bookingTime, 'rejected']
+            );
+
+            if (checkBooking.rows.length > 0) {
+                res.writeHead(409, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({
+                    message: 'Ruangan sudah dibooking pada tanggal dan waktu tersebut'
+                }));
+                return;
+            }
+
+            // INSERT booking baru — MULTIPLE BOOKING ALLOWED
+            const result = await db.query(
+                `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status) 
+                 VALUES ($1, $2, $3, $4, $5, $6) 
+                 RETURNING *`,
+                [userId, roomId, bookingDate, bookingTime, purpose, 'pending']
+            );
+
+            res.writeHead(201, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                message: 'Booking berhasil dibuat',
+                booking: result.rows[0]
+            }));
+
+        } catch (error) {
+            console.error('Error creating booking:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Error membuat booking' }));
+        }
+    });
+}
 
     // 6. RUTE: GET USER BOOKINGS (GET /api/bookings/user/:userId)
     else if (req.url.startsWith('/api/bookings/user/') && req.method === 'GET') {
@@ -191,12 +194,110 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
-    // 7. JIKA RUTE TIDAK DITEMUKAN
+    // 7. RUTE: CANCEL BOOKING (PATCH /api/bookings/cancel/:id)
+    else if (req.url.startsWith('/api/bookings/cancel/') && req.method === 'PATCH') {
+        const id = req.url.split('/')[3];
+
+        try {
+            const result = await db.query(
+                `UPDATE bookings 
+                SET status = 'cancelled_by_user' 
+                WHERE id = $1 
+                RETURNING *`,
+                [id]
+            );
+
+            if (result.rows.length === 0) {
+                res.writeHead(404, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Booking tidak ditemukan' }));
+                return;
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({
+                message: 'Booking berhasil dibatalkan',
+                booking: result.rows[0]
+            }));
+
+        } catch (error) {
+            console.error('Cancel error:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Gagal membatalkan booking' }));
+        }
+    }
+    // 8. RUTE: GET SEMUA BOOKING (ADMIN)
+    else if (req.url === '/api/bookings' && req.method === 'GET') {
+
+        try {
+            const result = await db.query(`
+                SELECT b.*, u.username, r.name AS room_name, r.image_path
+                FROM bookings b
+                JOIN users u ON b.user_id = u.id
+                JOIN rooms r ON b.room_id = r.id
+                ORDER BY b.created_at DESC
+            `);
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify(result.rows));
+
+        } catch (error) {
+            console.error('Admin fetch error:', error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Gagal mengambil semua booking' }));
+        }
+    }
+    // 9. RUTE: APPROVE BOOKING (PATCH /api/bookings/approve/:id)
+    else if (req.url.startsWith('/api/bookings/approve/') && req.method === 'PATCH') {
+        const id = req.url.split('/')[3];
+
+        try {
+            const result = await db.query(
+                `UPDATE bookings 
+                SET status = 'approved' 
+                WHERE id = $1 
+                RETURNING *`,
+                [id]
+            );
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: "Booking disetujui", booking: result.rows[0] }));
+
+        } catch (error) {
+            console.error(error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Gagal approve booking' }));
+        }
+    }
+    // 10. RUTE: REJECT BOOKING (PATCH /api/bookings/reject/:id)
+    else if (req.url.startsWith('/api/bookings/reject/') && req.method === 'PATCH') {
+        const id = req.url.split('/')[3];
+
+        try {
+            const result = await db.query(
+                `UPDATE bookings 
+                SET status = 'rejected' 
+                WHERE id = $1 
+                RETURNING *`,
+                [id]
+            );
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: "Booking ditolak", booking: result.rows[0] }));
+
+        } catch (error) {
+            console.error(error);
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Gagal reject booking' }));
+        }
+    }
+
     else {
         res.writeHead(404, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ message: 'Halaman tidak ditemukan' }));
     }
 });
+
+
 
 // Jalankan Server
 server.listen(3000, () => {

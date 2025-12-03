@@ -26,6 +26,7 @@ async function loadSelectedRoom() {
 // Fungsi untuk update tampilan ruangan di halaman booking detail
 function updateRoomDisplay(room) {
     // Update gambar ruangan
+    
     const roomImage = document.querySelector('.room-image img');
     if (roomImage) {
         roomImage.src = room.image_path;

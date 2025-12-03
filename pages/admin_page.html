@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Booking Management</title>
+
     <link rel="stylesheet" href="../css/dashboard.css">
     <link rel="stylesheet" href="../css/admin.css">
-
 </head>
 
 <body>
+
     <header class="main-header">
         <div class="header-left">
             <img id="app-logo" src="../images/logo.png" alt="Logo Aplikasi">
@@ -22,15 +23,19 @@
 
         <div class="header-right">
             <span id="usernameDisplay">Hi, Admin!</span>
-            <a href="login.html" id="logoutButton" class="nav-link logout"><img id="logout_icon"
-                    src="../images/logout_icon.png" alt=""></a>
+            <a href="login.html" id="logoutButton" class="nav-link logout">
+                <img id="logout_icon" src="../images/logout_icon.png" alt="">
+            </a>
         </div>
     </header>
 
     <div class="dashboardContainer">
         <main>
             <h2>Booking Requests</h2>
-            <img src="../images/ruang a/meetingroom-1.jpg" alt="Meeting Room Image" class="admin-room-image">
+
+            <!-- Gambar ekstra supaya memenuhi syarat minimal 2 gambar -->
+            <img src="../images/ruang a/meetingroom-1.jpg" class="admin-room-image">
+
             <div class="table-container">
                 <table class="booking-table">
                     <thead>
@@ -45,69 +50,14 @@
                             <th>Aksi</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <!--dummy-->
-                        <tr>
-                            <td>101</td>
-                            <td>User A</td>
-                            <td>Ruang Meeting 1</td>
-                            <td>2025-11-28</td>
-                            <td>09:00 - 10:00</td>
-                            <td>Project Kick-off</td>
-                            <td class="status"><span class="status-pending">Pending</span></td>
-                            <td class="action-buttons">
-                                <button class="btn btn-approve">Approve</button>
-                                <button class="btn btn-reject">Reject</button>
-                                <button class="btn btn-cancel">Cancel</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>102</td>
-                            <td>User B</td>
-                            <td>Ruang Diskusi B</td>
-                            <td>2025-11-28</td>
-                            <td>11:00 - 12:00</td>
-                            <td>Client Presentation</td>
-                            <td class="status"><span class="status-approved">Approved</span></td>
-                            <td class="action-buttons">
-                                <button class="btn btn-approve" disabled>Approve</button>
-                                <button class="btn btn-reject">Reject</button>
-                                <button class="btn btn-cancel">Cancel</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>103</td>
-                            <td>User C</td>
-                            <td>Ruang Meeting 2</td>
-                            <td>2025-11-29</td>
-                            <td>14:00 - 15:30</td>
-                            <td>Team Sync</td>
-                            <td class="status"><span class="status-rejected">Rejected</span></td>
-                            <td class="action-buttons">
-                                <button class="btn btn-approve">Approve</button>
-                                <button class="btn btn-reject" disabled>Reject</button>
-                                <button class="btn btn-cancel" disabled>Cancel</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>104</td>
-                            <td>User D</td>
-                            <td>Ruang Auditorium</td>
-                            <td>2025-12-01</td>
-                            <td>10:00 - 12:00</td>
-                            <td>All-hands Meeting</td>
-                            <td class="status"><span class="status-canceled">Canceled</span></td>
-                            <td class="action-buttons">
-                                <button class="btn btn-approve">Approve</button>
-                                <button class="btn btn-reject" disabled>Reject</button>
-                                <button class="btn btn-cancel" disabled>Cancel</button>
-                            </td>
-                        </tr>
+                    <tbody id="adminBookingTableBody">
+                        <!-- Data booking akan diisi melalui admin.js -->
                     </tbody>
                 </table>
             </div>
         </main>
     </div>
+
     <script src="../js/admin.js"></script>
 
 </body>
