@@ -27,7 +27,8 @@ document.getElementById("loginForm").addEventListener("submit", async function (
             // Login Berhasil
             console.log("Login sukses:", data);
 
-            // Menyimpan info user (username, role, email)
+            // Menyimpan info user (username, role, email, userId)
+            localStorage.setItem("userId", data.userId);
             localStorage.setItem("username", data.username);
             localStorage.setItem("role", data.role);
             localStorage.setItem("email", email);
