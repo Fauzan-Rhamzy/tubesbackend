@@ -13,7 +13,6 @@ server.on("request", async (request, response) => {
     const url = request.url;
 
     if (url.startsWith('/api')) {
-        // LOGIN API - PINDAHKAN KE DALAM BLOK API
         if (url === '/api/login' && method === 'POST') {
             let body = '';
 

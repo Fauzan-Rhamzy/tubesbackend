@@ -1,7 +1,7 @@
-// Fungsi untuk load detail ruangan yang dipilih dari dashboard
+//load detail ruangan yang dipilih dari dashboard
 async function loadSelectedRoom() {
     try {
-        // Ambil ID ruangan dari localStorage
+        // Mengambil ID ruangan dari localStorage
         const selectedRoomId = localStorage.getItem('selectedRoomId');
 
         if (!selectedRoomId) {
@@ -22,7 +22,6 @@ async function loadSelectedRoom() {
         // Update data ruangan
         updateRoomDisplay(room);
 
-        // Set roomId ke hidden input
         const roomIdInput = document.getElementById('roomId');
         if (roomIdInput) {
             roomIdInput.value = room.id;
@@ -35,7 +34,7 @@ async function loadSelectedRoom() {
     }
 }
 
-// Fungsi untuk update tampilan ruangan di halaman booking detail
+// update tampilan ruangan di halaman booking detail
 function updateRoomDisplay(room) {
     // Update gambar ruangan
     const roomImage = document.querySelector('.room-image img');
@@ -57,7 +56,7 @@ function updateRoomDisplay(room) {
     }
 }
 
-// Fungsi untuk menampilkan error
+// show error
 function showError(inputElement) {
     const errorMessage = inputElement.parentElement.querySelector('.error-message');
     if (errorMessage) {
@@ -66,7 +65,7 @@ function showError(inputElement) {
     inputElement.classList.add('error');
 }
 
-// Fungsi untuk menyembunyikan error
+// hide error
 function hideError(inputElement) {
     const errorMessage = inputElement.parentElement.querySelector('.error-message');
     if (errorMessage) {
@@ -85,7 +84,7 @@ function validateInput(inputElement) {
     return true;
 }
 
-// Fungsi untuk konversi value ke text waktu
+// konversi value ke text waktu
 function getBookingTimeText(timeValue) {
     const timeMap = {
         '1': '08.00 - 11.00',
@@ -96,14 +95,14 @@ function getBookingTimeText(timeValue) {
     return timeMap[timeValue] || '';
 }
 
-// Fungsi untuk cek apakah waktu sudah lewat (untuk hari ini)
+// ngecek apakah jam nya udah lewat
 function isTimePassed(timeValue) {
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentTimeInMinutes = currentHour * 60 + currentMinute;
 
-    // Mapping waktu mulai setiap slot (dalam menit dari midnight)
+    // Mapping waktu mulai setiap slot
     const timeSlotStart = {
         '1': 8 * 60,      // 08:00
         '2': 11 * 60,     // 11:00
@@ -113,11 +112,11 @@ function isTimePassed(timeValue) {
 
     const slotStartTime = timeSlotStart[timeValue];
 
-    // Waktu dianggap sudah lewat jika waktu sekarang sudah melewati waktu mulai slot
+    // Waktu lewat jika waktu sekarang sudah melewati waktu mulai slot
     return currentTimeInMinutes >= slotStartTime;
 }
 
-// Fungsi untuk cek apakah tanggal yang dipilih adalah hari ini
+// untuk cek apakah tanggal yang dipilih adalah hari ini
 function isToday(dateString) {
     const selectedDate = new Date(dateString);
     const today = new Date();
@@ -127,8 +126,6 @@ function isToday(dateString) {
         selectedDate.getFullYear() === today.getFullYear();
 }
 
-// Cek ketersediaan waktu booking dari server
-// HANYA booking dengan status 'pending' atau 'confirmed' yang dianggap "booked"
 async function checkAvailability(roomId, date) {
     try {
         const response = await fetch(`http://localhost:3000/api/bookings/availability/${roomId}/${date}`);
@@ -139,8 +136,6 @@ async function checkAvailability(roomId, date) {
 
         const data = await response.json();
 
-        // Server sekarang sudah filter status != 'rejected'
-        // Tapi kita bisa double-check di sini juga kalau perlu
         return data.bookedTimes || [];
 
     } catch (error) {
@@ -149,13 +144,11 @@ async function checkAvailability(roomId, date) {
     }
 }
 
-// Update dropdown waktu berdasarkan ketersediaan
 async function updateTimeSlotAvailability() {
     const roomId = document.getElementById('roomId').value;
     const bookingDate = document.getElementById('bookingDate').value;
     const durationSelect = document.getElementById('duration');
 
-    // Jika tanggal belum dipilih, reset semua option
     if (!bookingDate) {
         const options = durationSelect.querySelectorAll('option');
         options.forEach(option => {
@@ -174,17 +167,14 @@ async function updateTimeSlotAvailability() {
 
     console.log('Checking availability for room:', roomId, 'date:', bookingDate);
 
-    // Cek apakah tanggal yang dipilih adalah hari ini
+    // ngecek tanggal yang dipilih 
     const isTodaySelected = isToday(bookingDate);
 
-    // Cek waktu yang sudah dibooking dari database
-    // Hanya yang status != 'rejected' dan != 'cancelled'
     const bookedTimes = await checkAvailability(roomId, bookingDate);
 
     console.log('Booked times (active only):', bookedTimes);
     console.log('Is today selected:', isTodaySelected);
 
-    // Update semua option di dropdown
     const options = durationSelect.querySelectorAll('option');
     options.forEach(option => {
         if (option.value) {
@@ -192,12 +182,10 @@ async function updateTimeSlotAvailability() {
             let isDisabled = false;
             let disableReason = '';
 
-            // Cek apakah waktu ini sudah dibooking (status aktif)
             if (bookedTimes.includes(timeText)) {
                 isDisabled = true;
                 disableReason = '(Already Booked)';
             }
-            // Cek apakah waktu sudah lewat (khusus untuk hari ini)
             else if (isTodaySelected && isTimePassed(option.value)) {
                 isDisabled = true;
                 disableReason = '(Time Passed)';
@@ -214,13 +202,11 @@ async function updateTimeSlotAvailability() {
         }
     });
 
-    // Reset pilihan jika yang dipilih sudah dibooking atau waktu sudah lewat
     if (durationSelect.value) {
         const selectedOption = durationSelect.options[durationSelect.selectedIndex];
         if (selectedOption.disabled) {
             durationSelect.value = '';
 
-            // Cek alasan disabled
             if (isTodaySelected && isTimePassed(selectedOption.value)) {
                 alert('The selected time has passed. Please choose another time.');
             } else {
@@ -288,20 +274,17 @@ async function handleSubmit(event) {
         return;
     }
 
-    // Cek apakah waktu yang dipilih sudah dibooking atau sudah lewat
     const selectedOption = duration.options[duration.selectedIndex];
     if (selectedOption.disabled) {
         alert('The selected time is not available. Please choose another time.');
         return;
     }
 
-    // Validasi tambahan: cek jika hari ini dan waktu sudah lewat
     if (isToday(bookingDate.value) && isTimePassed(duration.value)) {
         alert('Cannot book a time that has already passed today. Please choose another time.');
         return;
     }
 
-    // Ambil userId dari localStorage (disimpan saat login)
     const userId = localStorage.getItem('userId');
 
     if (!userId) {
@@ -310,7 +293,6 @@ async function handleSubmit(event) {
         return;
     }
 
-    // Siapkan data booking
     const bookingData = {
         userId: parseInt(userId),
         roomId: parseInt(roomId.value),
@@ -369,29 +351,24 @@ document.addEventListener("DOMContentLoaded", () => {
         submitBtn.addEventListener("click", handleSubmit);
     }
 
-    // Setup live validation
     setupLiveValidation();
 
-    // Setup booking date dengan min date = hari ini
     const bookingDate = document.getElementById("bookingDate");
     if (bookingDate) {
         const today = new Date().toISOString().split("T")[0];
         bookingDate.setAttribute("min", today);
 
-        // Event listener untuk cek ketersediaan saat tanggal berubah
         bookingDate.addEventListener("change", updateTimeSlotAvailability);
     }
 
-    // Setup duration select untuk update availability saat pertama kali load
     const durationSelect = document.getElementById("duration");
     if (durationSelect) {
-        // Jika ada tanggal yang sudah dipilih, update availability
         if (bookingDate && bookingDate.value) {
             updateTimeSlotAvailability();
         }
     }
 
-    // Setup cancel button
+    // cancel button
     const cancelBtn = document.querySelector(".btn-cancel");
     if (cancelBtn) {
         cancelBtn.addEventListener("click", () => {
