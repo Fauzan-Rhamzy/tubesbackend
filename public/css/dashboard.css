@@ -3,7 +3,7 @@
     color: white;
 }
 
-.bookingButton:hover {
+.bookingButton:hover{
     background-color: #2d8c3a;
 }
 
@@ -27,7 +27,7 @@
 }
 
 .bookingButton {
-    background-color: #3bb54a;
+    background-color: #3bb54a;  
     color: white;
     padding: 14px 26px;
     border: none;
