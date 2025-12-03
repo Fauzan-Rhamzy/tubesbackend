@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Booking Management</title>
+    <link rel="stylesheet" href="../css/dashboard.css">
+    <link rel="stylesheet" href="../css/admin.css">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="header-left">
+            <img id="app-logo" src="../images/logo.png" alt="Logo Aplikasi">
+        </div>
+
+        <nav class="header-nav">
+            <a href="admin_page.html" class="nav-link">Bookings</a>
+        </nav>
+
+        <div class="header-right">
+            <span id="usernameDisplay">Hi, Admin!</span>
+            <a href="/login" id="logoutButton" class="nav-link logout"><img id="logout_icon"
+                    src="../images/logout_icon.png" alt=""></a>
+        </div>
+    </header>
+
+    <div class="dashboardContainer">
+        <main>
+            <h2>Booking Requests</h2>
+            <img src="../images/ruang-a/meetingroom-1.jpg" alt="Meeting Room Image" class="admin-room-image">
+            <div class="table-container">
+                <table class="booking-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Pengguna</th>
+                            <th>Ruangan</th>
+                            <th>Tanggal</th>
+                            <th>Jam</th>
+                            <th>Tujuan</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    <script src="../js/admin.js"></script>
+
+</body>
+
+</html>
