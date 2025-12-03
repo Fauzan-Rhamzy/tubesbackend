@@ -15,46 +15,9 @@ server.on("request", async (request, response) => {
     // handle API requests
     if (url.startsWith('/api')) {
         if (url === '/api/bookings' && method === 'GET') {
-            try {
-                // Mengambil semua bookings
-                const bookingsResult = await db.query(
-                    'SELECT * FROM bookings ORDER BY created_at DESC'
-                );
-
-                // Mengambil semua rooms dan users
-                const roomsResult = await db.query('SELECT * FROM rooms');
-                const usersResult = await db.query('SELECT id, username FROM users');
-
-                const roomsMap = {};
-                roomsResult.rows.forEach(room => {
-                    roomsMap[room.id] = room;
-                });
-
-                const usersMap = {};
-                usersResult.rows.forEach(user => {
-                    usersMap[user.id] = user;
-                });
-
-                // Menggabungkan data
-                const bookings = bookingsResult.rows.map(booking => {
-                    const room = roomsMap[booking.room_id] || {};
-                    const user = usersMap[booking.user_id] || {};
-
-                    return {
-                        ...booking,
-                        room_name: room.name,
-                        image_path: room.image_path,
-                        username: user.username
-                    };
-                });
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(bookings));
-            } catch (error) {
-                console.error('Error fetching bookings:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data booking' }));
-            }
+            const result = await db.query('SELECT * FROM bookings');
+            response.writeHead(200, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(result.rows));
             return;
         }
 
@@ -118,37 +81,17 @@ server.on("request", async (request, response) => {
             try {
                 const userId = url.split('/')[4];
 
-                // Mengambil bookings user
-                const bookingsResult = await db.query(
-                    'SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC',
+                const result = await db.query(
+                    `SELECT b.*, r.name as room_name, r.image_path 
+             FROM bookings b
+             JOIN rooms r ON b.room_id = r.id
+             WHERE b.user_id = $1 
+             ORDER BY b.created_at DESC`,
                     [userId]
                 );
 
-                // Ambil data rooms untuk semua booking
-                const roomIds = bookingsResult.rows.map(b => b.room_id);
-                const roomsResult = await db.query(
-                    `SELECT * FROM rooms WHERE id = ANY($1)`,
-                    [roomIds]
-                );
-
-                // Mapping rooms
-                const roomsMap = {};
-                roomsResult.rows.forEach(room => {
-                    roomsMap[room.id] = room;
-                });
-
-                // Menggabungkan data
-                const bookings = bookingsResult.rows.map(booking => {
-                    const room = roomsMap[booking.room_id] || {};
-                    return {
-                        ...booking,
-                        room_name: room.name,
-                        image_path: room.image_path
-                    };
-                });
-
                 response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(bookings));
+                response.end(JSON.stringify(result.rows));
 
             } catch (error) {
                 console.error('Error fetching user bookings:', error);
@@ -181,20 +124,6 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET all users
-        if (url === '/api/users' && method === 'GET') {
-            try {
-                const result = await db.query('SELECT id, username, email, role, created_at FROM users ORDER BY id ASC');
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
-            } catch (error) {
-                console.error('Error fetching users:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data users' }));
-            }
-            return;
-        }
-
         // GET all rooms
         if (url === '/api/rooms' && method === 'GET') {
             try {
@@ -210,7 +139,7 @@ server.on("request", async (request, response) => {
         }
 
         // GET booking availability by room and date
-        if (url.startsWith('/api/bookings/availability/') && method === 'GET') {
+        if (url === '/api/bookings/availability/' && method === 'GET') {
             try {
                 const parts = url.split('/');
                 const roomId = parts[4];
@@ -238,7 +167,7 @@ server.on("request", async (request, response) => {
         }
 
         // GET room by ID
-        if (url.startsWith('/api/rooms/') && !url.includes('user') && method === 'GET') {
+        if (url === '/api/rooms/' && method === 'GET') {
             try {
                 const id = url.split('/')[3];
 
