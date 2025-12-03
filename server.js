@@ -8,28 +8,50 @@ const server = new http.Server();
 server.on("request", async (request, response) => {
     console.log(`Request received: ${request.method} ${request.url}`);
 
-    // cek method
     const method = request.method;
-    // cek path
     const url = request.url;
-    // cek extension
     const extension = path.extname(request.url);
-
 
     // handle API requests
     if (url.startsWith('/api')) {
-        // GET all bookings with JOIN
+        // GET all bookings (TANPA JOIN)
         if (url === '/api/bookings' && method === 'GET') {
             try {
-                const result = await db.query(
-                    `SELECT b.*, r.name as room_name, r.image_path, u.username 
-                     FROM bookings b 
-                     JOIN rooms r ON b.room_id = r.id 
-                     JOIN users u ON b.user_id = u.id
-                     ORDER BY b.created_at DESC`
+                // Ambil semua bookings
+                const bookingsResult = await db.query(
+                    'SELECT * FROM bookings ORDER BY created_at DESC'
                 );
+
+                // Ambil semua rooms dan users
+                const roomsResult = await db.query('SELECT * FROM rooms');
+                const usersResult = await db.query('SELECT id, username FROM users');
+
+                // Buat mapping untuk lookup cepat
+                const roomsMap = {};
+                roomsResult.rows.forEach(room => {
+                    roomsMap[room.id] = room;
+                });
+
+                const usersMap = {};
+                usersResult.rows.forEach(user => {
+                    usersMap[user.id] = user;
+                });
+
+                // Gabungkan data manual
+                const bookings = bookingsResult.rows.map(booking => {
+                    const room = roomsMap[booking.room_id] || {};
+                    const user = usersMap[booking.user_id] || {};
+
+                    return {
+                        ...booking,
+                        room_name: room.name,
+                        image_path: room.image_path,
+                        username: user.username
+                    };
+                });
+
                 response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
+                response.end(JSON.stringify(bookings));
             } catch (error) {
                 console.error('Error fetching bookings:', error);
                 response.writeHead(500, { 'Content-Type': 'application/json' });
@@ -48,17 +70,19 @@ server.on("request", async (request, response) => {
                 try {
                     const { userId, roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
 
-                    // Validasi input
                     if (!userId || !roomId || !bookingDate || !bookingTime || !purpose) {
                         response.writeHead(400, { 'Content-Type': 'application/json' });
                         response.end(JSON.stringify({ message: 'Semua field harus diisi' }));
                         return;
                     }
 
-                    // Cek apakah ruangan sudah dibooking
+                    // Cek apakah ruangan sudah dibooking dengan status aktif
+                    // Hanya cek booking dengan status 'pending' atau 'approved'
                     const checkBooking = await db.query(
-                        'SELECT * FROM bookings WHERE room_id = $1 AND booking_date = $2 AND booking_time = $3 AND status != $4',
-                        [roomId, bookingDate, bookingTime, 'rejected']
+                        `SELECT * FROM bookings 
+                         WHERE room_id = $1 AND booking_date = $2 AND booking_time = $3 
+                         AND status IN ('pending', 'approved')`,
+                        [roomId, bookingDate, bookingTime]
                     );
 
                     if (checkBooking.rows.length > 0) {
@@ -92,22 +116,42 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET user bookings
+        // GET user bookings (TANPA JOIN)
         if (url.startsWith('/api/bookings/user/') && method === 'GET') {
             try {
                 const userId = url.split('/')[4];
 
-                const result = await db.query(
-                    `SELECT b.*, r.name as room_name, r.image_path 
-                     FROM bookings b 
-                     JOIN rooms r ON b.room_id = r.id 
-                     WHERE b.user_id = $1 
-                     ORDER BY b.created_at DESC`,
+                // Ambil bookings user
+                const bookingsResult = await db.query(
+                    'SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC',
                     [userId]
                 );
 
+                // Ambil data rooms untuk semua booking
+                const roomIds = bookingsResult.rows.map(b => b.room_id);
+                const roomsResult = await db.query(
+                    `SELECT * FROM rooms WHERE id = ANY($1)`,
+                    [roomIds]
+                );
+
+                // Mapping rooms
+                const roomsMap = {};
+                roomsResult.rows.forEach(room => {
+                    roomsMap[room.id] = room;
+                });
+
+                // Gabungkan data
+                const bookings = bookingsResult.rows.map(booking => {
+                    const room = roomsMap[booking.room_id] || {};
+                    return {
+                        ...booking,
+                        room_name: room.name,
+                        image_path: room.image_path
+                    };
+                });
+
                 response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
+                response.end(JSON.stringify(bookings));
 
             } catch (error) {
                 console.error('Error fetching user bookings:', error);
@@ -164,6 +208,35 @@ server.on("request", async (request, response) => {
                 console.error('Error fetching rooms:', error);
                 response.writeHead(500, { 'Content-Type': 'application/json' });
                 response.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
+            }
+            return;
+        }
+
+        // GET booking availability by room and date
+        if (url.startsWith('/api/bookings/availability/') && method === 'GET') {
+            try {
+                const parts = url.split('/');
+                const roomId = parts[4];
+                const date = parts[5];
+
+                // Hanya ambil booking dengan status 'pending' atau 'approved'
+                // Booking dengan status 'rejected' atau 'cancelled' tidak dianggap "booked"
+                const result = await db.query(
+                    `SELECT booking_time FROM bookings 
+                     WHERE room_id = $1 AND booking_date = $2 
+                     AND status IN ('pending', 'approved')`,
+                    [roomId, date]
+                );
+
+                const bookedTimes = result.rows.map(row => row.booking_time);
+
+                response.writeHead(200, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ bookedTimes }));
+
+            } catch (error) {
+                console.error('Error checking availability:', error);
+                response.writeHead(500, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ message: 'Error checking availability' }));
             }
             return;
         }
@@ -296,7 +369,6 @@ server.on("request", async (request, response) => {
     };
 
     const contentType = mimeTypes[fileExtension] || "text/plain";
-    // console.log(contentType);
 
     console.log("URL dari Browser:", url);
     console.log("Server mencari di:", filePath);
