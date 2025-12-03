@@ -3,18 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const fetchData = async () => {
         try {
-            const [bookingsRes, usersRes, roomsRes] = await Promise.all([
-                fetch('/api/bookings'),
-                fetch('/api/users'),
-                fetch('/api/rooms')
-            ]);
-
+            const bookingsRes = await fetch('/api/bookings');
             const bookings = await bookingsRes.json();
-            const users = await usersRes.json();
-            const rooms = await roomsRes.json();
-
-            const usersMap = new Map(users.map(user => [user.id, user.username]));
-            const roomsMap = new Map(rooms.map(room => [room.id, room.name]));
 
             tableBody.innerHTML = '';
 
@@ -39,10 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 row.innerHTML = `
                     <td>${booking.id}</td>
-                    <td>${usersMap.get(booking.user_id) || 'Unknown User'}</td>
-                    <td>${roomsMap.get(booking.room_id) || 'Unknown Room'}</td>
+                    <td>${booking.username || 'Unknown User'}</td>
+                    <td>${booking.room_name || 'Unknown Room'}</td>
                     <td>${new Date(booking.booking_date).toLocaleDateString()}</td>
-                    <td>${booking.start_time} - ${booking.end_time}</td>
+                    <td>${booking.booking_time}</td>
                     <td>${booking.purpose}</td>
                     <td class="status"><span class="${statusClass}">${statusText}</span></td>
                     <td>
