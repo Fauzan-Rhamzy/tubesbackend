@@ -32,7 +32,7 @@ function enableBookingButton() {
 //Load data ruangan dari database 
 async function loadRooms() {
     try {
-        // Fetch data dari Node.js API (ini di set di server.js)
+        // Fetch data dari server.js
         const response = await fetch('http://localhost:3000/api/rooms');
         const rooms = await response.json();
 
@@ -51,8 +51,7 @@ async function loadRooms() {
     }
 }
 
-// Fungsi untuk menampilkan ruangan ke HTML
-
+// Fungsi untuk menampilkan data ruangan ke HTML
 function displayRooms(rooms) {
     const container = document.querySelector('.room-options-container');
 
@@ -82,10 +81,7 @@ function setupRoomSelection() {
 
     roomCards.forEach(card => {
         card.addEventListener('click', function () {
-            // Hapus active dari semua card
             roomCards.forEach(c => c.classList.remove("active"));
-
-            // Tambahkan active ke card yang diklik
             this.classList.add("active");
 
             // Simpan ID ruangan yang dipilih
