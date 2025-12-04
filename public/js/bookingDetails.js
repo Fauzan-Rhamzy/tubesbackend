@@ -230,20 +230,7 @@ async function handleSubmit(event) {
             document.getElementById("unsuccessOkBtn").onclick = function () {
                 unsuccessPopup.classList.remove('show');
             };
-        } else {
-            alert("Mohon lengkapi semua data!");
         }
-        return;
-    }
-
-    const selectedOption = duration.options[duration.selectedIndex];
-    if (selectedOption.disabled) {
-        alert('Waktu yang dipilih tidak tersedia.');
-        return;
-    }
-
-    if (isToday(bookingDate.value) && isTimePassed(duration.value)) {
-        alert('Tidak dapat booking untuk waktu yang sudah lewat hari ini.');
         return;
     }
 
@@ -264,7 +251,6 @@ async function handleSubmit(event) {
                 window.location.href = "/history";
             };
         } else {
-            alert("Booking Berhasil!");
             window.location.href = "/history";
         }
     } else if (result.error) {
