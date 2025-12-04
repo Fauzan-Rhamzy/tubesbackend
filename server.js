@@ -398,7 +398,7 @@ server.on("request", async (request, response) => {
     if (url === '/dashboard' || url === '/history' || url === '/booking') {
         const user = getUserFromRequest(request);
         // Kalau belum login -> Tendang ke Login
-        if (!user) {
+        if (!user || user.role !== "user") {
             response.writeHead(302, { 'Location': '/login' });
             response.end();
             return;
