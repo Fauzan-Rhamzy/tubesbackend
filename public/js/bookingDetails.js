@@ -1,4 +1,4 @@
-// Fungsi untuk load detail ruangan yang dipilih dari dashboard
+// load detail ruangan yang dipilih dari dashboard
 async function loadSelectedRoom() {
     try {
         const selectedRoomId = localStorage.getItem('selectedRoomId');
@@ -9,7 +9,6 @@ async function loadSelectedRoom() {
             return;
         }
 
-        // fetch dari api 
         const response = await fetch(`/api/rooms/${selectedRoomId}`);
 
         if (!response.ok) {
@@ -34,7 +33,6 @@ async function loadSelectedRoom() {
 function updateRoomDisplay(room) {
     const roomImage = document.querySelector('.room-image img');
     if (roomImage) {
-        // Handle gambar default jika kosong
         roomImage.src = room.image_path ? room.image_path : '../images/ruang-a/meetingroom-1.jpg';
         roomImage.alt = room.name;
         roomImage.onerror = function () { this.src = '../images/ruang-a/meetingroom-1.jpg'; };
@@ -51,14 +49,12 @@ function updateRoomDisplay(room) {
     }
 }
 
-// untuk showerror
 function showError(inputElement) {
     const errorMessage = inputElement.parentElement.querySelector('.error-message');
     if (errorMessage) errorMessage.classList.add('show');
     inputElement.classList.add('error');
 }
 
-// untuk hideerror
 function hideError(inputElement) {
     const errorMessage = inputElement.parentElement.querySelector('.error-message');
     if (errorMessage) errorMessage.classList.remove('show');
@@ -84,6 +80,36 @@ function getBookingTimeText(timeValue) {
     return timeMap[timeValue] || '';
 }
 
+// Fungsi untuk cek apakah waktu sudah lewat
+function isTimePassed(timeValue) {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    // Mapping waktu mulai untuk setiap slot
+    const timeSlotStart = {
+        '1': 8 * 60,      // 08:00
+        '2': 11 * 60,     // 11:00
+        '3': 13 * 60,     // 13:00
+        '4': 15 * 60      // 15:00
+    };
+
+    const slotStartTime = timeSlotStart[timeValue];
+
+    // Lewat jika sudah lebih besar dari waktu slot
+    return currentTimeInMinutes >= slotStartTime;
+}
+
+function isToday(dateString) {
+    const selectedDate = new Date(dateString);
+    const today = new Date();
+
+    return selectedDate.getDate() === today.getDate() &&
+        selectedDate.getMonth() === today.getMonth() &&
+        selectedDate.getFullYear() === today.getFullYear();
+}
+
 // Cek ketersediaan waktu booking
 async function checkAvailability(roomId, date) {
     try {
@@ -107,15 +133,37 @@ async function updateTimeSlotAvailability() {
         return;
     }
 
+    console.log('Checking availability for room:', roomId, 'date:', bookingDate);
+
+    // tanggal hari ini 
+    const isTodaySelected = isToday(bookingDate);
+
     const bookedTimes = await checkAvailability(roomId, bookingDate);
+
+    console.log('Booked times:', bookedTimes);
+    console.log('Is today selected:', isTodaySelected);
 
     const options = durationSelect.querySelectorAll('option');
     options.forEach(option => {
         if (option.value) {
             const timeText = getBookingTimeText(option.value);
+            let isDisabled = false;
+            let disableReason = '';
+
             if (bookedTimes.includes(timeText)) {
+                isDisabled = true;
+                disableReason = '(Already Booked)';
+            }
+
+            else if (isTodaySelected && isTimePassed(option.value)) {
+                isDisabled = true;
+                disableReason = '(Time Passed)';
+            }
+
+            if (isDisabled) {
                 option.disabled = true;
-                option.textContent = `${timeText} (Already Booked)`;
+                option.textContent = `${timeText} ${disableReason}`;
+                console.log('Disabling time slot:', timeText, disableReason);
             } else {
                 option.disabled = false;
                 option.textContent = timeText;
@@ -127,7 +175,12 @@ async function updateTimeSlotAvailability() {
         const selectedOption = durationSelect.options[durationSelect.selectedIndex];
         if (selectedOption.disabled) {
             durationSelect.value = '';
-            alert('Waktu yang dipilih sudah terisi. Silakan pilih waktu lain.');
+
+            if (isTodaySelected && isTimePassed(selectedOption.value)) {
+                alert('Waktu yang dipilih sudah lewat. Silakan pilih waktu lain.');
+            } else {
+                alert('Waktu yang dipilih sudah terisi. Silakan pilih waktu lain.');
+            }
         }
     }
 }
@@ -156,7 +209,6 @@ async function submitBooking(bookingData) {
         const result = await response.json();
 
         if (!response.ok) {
-            // Handle jika sesi habis (401)
             if (response.status === 401) {
                 alert('Sesi anda telah berakhir. Silakan login kembali.');
                 window.location.href = '/login';
@@ -205,7 +257,12 @@ async function handleSubmit(event) {
 
     const selectedOption = duration.options[duration.selectedIndex];
     if (selectedOption.disabled) {
-        alert('Waktu yang dipilih sudah dibooking.');
+        alert('Waktu yang dipilih tidak tersedia.');
+        return;
+    }
+
+    if (isToday(bookingDate.value) && isTimePassed(duration.value)) {
+        alert('Tidak dapat booking untuk waktu yang sudah lewat hari ini.');
         return;
     }
 
@@ -263,6 +320,13 @@ document.addEventListener("DOMContentLoaded", () => {
         bookingDate.addEventListener("change", updateTimeSlotAvailability);
     }
 
+    const durationSelect = document.getElementById("duration");
+    if (durationSelect) {
+        if (bookingDate && bookingDate.value) {
+            updateTimeSlotAvailability();
+        }
+    }
+
     const cancelBtn = document.querySelector(".btn-cancel");
     if (cancelBtn) {
         cancelBtn.addEventListener("click", () => {
@@ -270,7 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Load username display
     if (typeof initUserDisplay === 'function') {
         initUserDisplay();
     }
