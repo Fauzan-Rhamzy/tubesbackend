@@ -426,9 +426,12 @@ server.on("request", async (request, response) => {
         fileName = url;
     }
 
+    // buat direktori full menuju file
     const filePath = path.join(folder, fileName);
+    // ambil extension dari file
     const fileExtension = path.extname(filePath);
 
+    // mapping jenis extension dan nama content type nya
     const mimeTypes = {
         ".html": "text/html",
         ".css": "text/css",
@@ -439,6 +442,7 @@ server.on("request", async (request, response) => {
         ".webp": "image/webp",
     };
 
+    // ambil content ype berdasarkan mapping mimeTypes
     const contentType = mimeTypes[fileExtension] || "text/plain";
 
     fs.readFile(filePath, (err, content) => {
