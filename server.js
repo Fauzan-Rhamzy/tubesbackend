@@ -161,7 +161,7 @@ server.on("request", async (request, response) => {
 
         // GET user bookings untuk history
         if (url === '/api/my-bookings' && method === 'GET') {
-            const user = getUserFromRequest(request); // 1. Cek siapa yang request dari Cookie
+            const user = getUserFromRequest(request); 
 
             if (!user) {
                 response.writeHead(401, { 'Content-Type': 'application/json' });
@@ -170,13 +170,12 @@ server.on("request", async (request, response) => {
             }
 
             try {
-                // 2. Ambil data booking untuk user yang login
                 const bookingsResult = await db.query(
                     'SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC',
                     [user.id]
                 );
 
-                // Jika tidak ada booking, langsung return array kosong
+                //Tidak ada booking 
                 if (bookingsResult.rows.length === 0) {
                     response.writeHead(200, { 'Content-Type': 'application/json' });
                     response.end(JSON.stringify([]));
