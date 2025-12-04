@@ -353,7 +353,8 @@ server.on("request", async (request, response) => {
 
                     response.end(JSON.stringify({
                         message: 'Login berhasil',
-                        role: user.role
+                        role: user.role,
+                        username: user.username
                     }));
                 } catch (error) {
                     console.error('Login error:', error);
