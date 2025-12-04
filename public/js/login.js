@@ -1,12 +1,12 @@
 document.getElementById("loginForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    // 1. Ambil data dari form HTML
+    // ambil input
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
     try {
-        // 2. Kirim Request ke Server (INI BAGIAN YANG TADINYA HILANG)
+        // kirim ke server request login
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: {

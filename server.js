@@ -9,6 +9,7 @@ const server = new http.Server();
 
 const SECRET_KEY = "rahasia";
 
+// ambil user lewat cookie
 function getUserFromRequest(request) {
     const cookieHeader = request.headers.cookie;
     if (!cookieHeader) return null;
@@ -35,14 +36,14 @@ server.on("request", async (request, response) => {
     // handle API requests
     if (url.startsWith('/api')) {
         
-        // --- API: LOGOUT (DIPERBAIKI POSISINYA DISINI) ---
+        // handle logout
         if (url === '/api/logout' && method === 'POST') {
-            // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
-            response.writeHead(200, {
-                'Content-Type': 'application/json',
-                'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0'
+            // token dikosongkan
+            response.writeHead(302, {
+                'Set-Cookie': '',
+                'Location':"/login"
             });
-            response.end(JSON.stringify({ message: 'Logout berhasil' }));
+            response.end();
             return;
         }
 
@@ -100,8 +101,9 @@ server.on("request", async (request, response) => {
 
             request.on('end', async () => {
                 try {
-                    // [UBAH] 1. Cek User dari Cookie
+                    // cek user dari Cookie
                     const user = getUserFromRequest(request);
+
                     if (!user) {
                         response.writeHead(401, { 'Content-Type': 'application/json' });
                         response.end(JSON.stringify({ message: 'Silakan login terlebih dahulu' }));
@@ -327,32 +329,47 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // LOGIN API
+        // handle request login
         if (url === '/api/login' && method === 'POST') {
+            // ngumpulin data
             let body = '';
 
             request.on('data', chunk => {
                 body += chunk.toString();
             });
 
+            // olah data
             request.on('end', async () => {
                 try {
+                    // ambil email dan pass, cek ke db
                     const { email, password } = JSON.parse(body);
                     const result = await db.query(
                         'SELECT * FROM users WHERE email = $1',
                         [email]
                     );
 
+                    // jika tidak ada
                     if (result.rows.length === 0) {
-                        response.writeHead(401, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Email tidak ditemukan' }));
+                        response.writeHead(401, { 
+                            'Content-Type': 'application/json' 
+                        });
+                        response.end(JSON.stringify({ 
+                            message: 'email is not registered' 
+                        }));
                         return;
                     }
 
+                    // ambil user
                     const user = result.rows[0];
+
+                    // cek pass
                     if (user.password !== password) {
-                        response.writeHead(401, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Password salah' }));
+                        response.writeHead(401, { 
+                            'Content-Type': 'application/json' 
+                        });
+                        response.end(JSON.stringify({ 
+                            message: 'wrong pass' 
+                        }));
                         return;
                     }
 
@@ -362,13 +379,14 @@ server.on("request", async (request, response) => {
                         { expiresIn: '1h' }
                     );
 
+                    // kirim respon ke user
                     response.writeHead(200, {
                         'Content-Type': 'application/json',
                         'Set-Cookie': `token=${token}; HttpOnly; Path=/; Max-Age=3600`
                     });
 
                     response.end(JSON.stringify({
-                        message: 'Login berhasil',
+                        message: 'login sucesfull',
                         role: user.role
                     }));
                 } catch (error) {
@@ -381,12 +399,12 @@ server.on("request", async (request, response) => {
         }
     }
 
-    // Handle static files
+    // handle static files
     
-    // 1. Proteksi Halaman Admin
+    // restrict admin
     if (url === '/admin' || url === '/pages/admin_page.html') {
         const user = getUserFromRequest(request);
-        // Kalau belum login ATAU bukan admin -> Tendang ke Login
+        // kalau user belum login atau role nya bukan admin
         if (!user || user.role !== 'admin') {
             response.writeHead(302, { 'Location': '/login' });
             response.end();
@@ -394,38 +412,51 @@ server.on("request", async (request, response) => {
         }
     }
 
-    // 2. Proteksi Halaman Dashboard, History, Booking
+    // halaman dashboard, history, booking hanya diakses user aja
     if (url === '/dashboard' || url === '/history' || url === '/booking') {
         const user = getUserFromRequest(request);
-        // Kalau belum login -> Tendang ke Login
-        if (!user) {
+        // kalau belum login atau role nya bukan user
+        if (!user || user.role!=='user') {
             response.writeHead(302, { 'Location': '/login' });
             response.end();
             return;
         }
     }
 
-    // --- HANDLE STATIC FILES (Baru dijalankan setelah lolos cek di atas) ---
+    // path file css, js, html
     let folder = "./public";
+    // file/halaman yang diminta
     let fileName = url;
 
+    // handle halaman login
     if (url === "/" || url === "/login") {
         fileName = "/pages/login.html";
-    } else if (url === "/dashboard") {
+    } 
+    // handle halaman dashboard
+    else if (url === "/dashboard") {
         fileName = "/pages/dashboard.html";
-    } else if (url === "/admin") {
+    } 
+    // handle halaman admin
+    else if (url === "/admin") {
         fileName = "/pages/admin_page.html";
-    } else if (url === "/history") {
+    }
+    // handle halamaan history
+     else if (url === "/history") {
         fileName = "/pages/history.html";
     } else if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
-    } else {
+    } 
+    // handle jika diminta css, js
+    else {
         fileName = url;
     }
 
+    // ambil path utuh dari mulai folder utama sampai ke file yang diminta
     const filePath = path.join(folder, fileName);
+    // cek extension file untuk content type response
     const fileExtension = path.extname(filePath);
 
+    // map extension dan content type
     const mimeTypes = {
         ".html": "text/html",
         ".css": "text/css",
@@ -436,10 +467,10 @@ server.on("request", async (request, response) => {
         ".webp": "image/webp",
     };
 
+    // ambil content type berdasarkan extension dari file
     const contentType = mimeTypes[fileExtension] || "text/plain";
 
-    // console.log("URL dari Browser:", url); // Opsional: matikan log biar ga berisik
-
+    // kirim file
     fs.readFile(filePath, (err, content) => {
         if (err) {
             response.writeHead(404);
@@ -449,7 +480,7 @@ server.on("request", async (request, response) => {
             response.end(content);
         }
     });
-}); // <--- Tutup server.on request
+}); 
 
 server.listen(PORT, () => {
     console.log(`Server is listening on http://localhost:${PORT}`);
