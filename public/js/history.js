@@ -10,7 +10,7 @@ async function fetchUserBookings() {
         const response = await fetch(`/api/my-bookings`);
 
         if (!response.ok) {
-            throw new Error('Gagal mengambil data booking');
+            throw new Error('Failed to fetxh booking data');
         }
 
         const bookings = await response.json();
@@ -44,7 +44,7 @@ async function cancelBooking(id) {
         }
     } catch (error) {
         console.error('Error cancelling booking:', error);
-        alert("Terjadi kesalahan saat menghubungi server");
+        alert("Failed connect to server");
     }
 }
 
@@ -53,7 +53,7 @@ function renderHistory(bookings) {
     list.innerHTML = "";
 
     if (bookings.length === 0) {
-        list.innerHTML = '<p id="belum-ada-booking">Belum ada riwayat booking.</p>';
+        list.innerHTML = '<p id="belum-ada-booking">There is no history booking data.</p>';
         return;
     }
 
@@ -98,7 +98,7 @@ function renderHistory(bookings) {
         card.innerHTML = `
             <div class="history-card-content">
                 <div>
-                    <div class="room-name">${item.room_name || 'Nama Ruangan Tidak Ditemukan'}</div>
+                    <div class="room-name">${item.room_name}</div>
                     <div class="detail">Date: ${formattedDate}</div>
                     <div class="detail">Time: ${timeLabel}</div>
                     <div class="detail">Purpose: ${item.purpose}</div>
