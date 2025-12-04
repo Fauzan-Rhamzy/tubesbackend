@@ -41,6 +41,7 @@ server.on("request", async (request, response) => {
     // handle API requests
     if (url.startsWith('/api')) {
         
+        // handle logout, hapus cookie token nya
         if (url === '/api/logout' && method === 'POST') {
             response.writeHead(200, {
                 'Content-Type': 'application/json',
