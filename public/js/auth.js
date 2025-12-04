@@ -1,8 +1,7 @@
 // public/js/auth.js
 
 function loadUsername() {
-    // Ambil nama untuk tampilan saja. 
-    // (Pastikan di login.js kamu menyimpan 'username' ke localStorage jika ingin nama muncul)
+    // Ambil nama dari localstorage (ongoing)
     const username = localStorage.getItem("username") || "User";
     const usernameDisplay = document.getElementById("usernameDisplay");
 
@@ -15,18 +14,16 @@ function setupLogout() {
     const logoutButton = document.getElementById("logoutButton");
 
     if (logoutButton) {
-        // Ubah jadi async karena kita mau request ke server
         logoutButton.addEventListener("click", async function (e) {
             e.preventDefault();
 
             try {
-                // [PENTING] Minta server menghapus Cookie HTTP-Only
                 const response = await fetch('/api/logout', {
                     method: 'POST'
                 });
 
                 if (response.ok) {
-                    // Hapus data sisa di localStorage (hanya data tampilan)
+                    // Hapus data sisa di localStorage
                     localStorage.removeItem("username");
                     localStorage.removeItem("selectedRoomId");
                     localStorage.removeItem("userId"); // Jaga-jaga jika masih ada
@@ -48,13 +45,4 @@ function setupLogout() {
 function initUserDisplay() {
     loadUsername();
     setupLogout();
-}
-
-// Export module untuk kebutuhan testing/node (jika diperlukan)
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        loadUsername,
-        setupLogout,
-        initUserDisplay
-    };
 }

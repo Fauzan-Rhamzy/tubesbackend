@@ -35,9 +35,7 @@ server.on("request", async (request, response) => {
     // handle API requests
     if (url.startsWith('/api')) {
         
-        // --- API: LOGOUT (DIPERBAIKI POSISINYA DISINI) ---
         if (url === '/api/logout' && method === 'POST') {
-            // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
             response.writeHead(200, {
                 'Content-Type': 'application/json',
                 'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0'
@@ -46,7 +44,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET all bookings
+        // GET all bookings, untuk di page admin
         if (url === '/api/bookings' && method === 'GET') {
             try {
                 // Mengambil semua bookings
@@ -90,7 +88,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // CREATE booking
+        // CREATE booking, buat di page 
         if (url === '/api/bookings' && method === 'POST') {
             let body = '';
 
@@ -100,7 +98,6 @@ server.on("request", async (request, response) => {
 
             request.on('end', async () => {
                 try {
-                    // [UBAH] 1. Cek User dari Cookie
                     const user = getUserFromRequest(request);
                     if (!user) {
                         response.writeHead(401, { 'Content-Type': 'application/json' });
@@ -108,7 +105,6 @@ server.on("request", async (request, response) => {
                         return;
                     }
 
-                    // [UBAH] 2. Hapus 'userId' dari body, karena kita pakai user.id dari cookie
                     const { roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
 
                     // Validasi input
@@ -134,12 +130,11 @@ server.on("request", async (request, response) => {
                         return;
                     }
 
-                    // [UBAH] 3. Insert menggunakan user.id (dari cookie)
                     const result = await db.query(
                         `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
                          VALUES ($1, $2, $3, $4, $5, $6)
                          RETURNING *`,
-                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending'] // <--- Pakai user.id
+                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending'] 
                     );
 
                     response.writeHead(201, { 'Content-Type': 'application/json' });
@@ -157,7 +152,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET user bookings
+        // GET user bookings untuk history
         if (url === '/api/my-bookings' && method === 'GET') {
             const user = getUserFromRequest(request); // 1. Cek siapa yang request dari Cookie
 
@@ -168,7 +163,7 @@ server.on("request", async (request, response) => {
             }
 
             try {
-                // 2. Ambil booking milik user ID tersebut
+                // 2. Ambil data booking untuk user yang login
                 const bookingsResult = await db.query(
                     'SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC',
                     [user.id]
@@ -181,7 +176,6 @@ server.on("request", async (request, response) => {
                     return;
                 }
 
-                // 3. Ambil data rooms (Logika Join Manual)
                 const roomIds = bookingsResult.rows.map(b => b.room_id);
                 const roomsResult = await db.query(
                     `SELECT * FROM rooms WHERE id = ANY($1)`,
@@ -212,7 +206,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // UPDATE booking status
+        // UPDATE booking status di admin dan history
         const bookingStatusMatch = url.match(/\/api\/bookings\/(\d+)\/status/);
         if (bookingStatusMatch && method === 'POST') {
             const id = bookingStatusMatch[1];
@@ -302,7 +296,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET room by ID
+        // GET room by ID buat dashboard
         if (url.startsWith('/api/rooms/') && !url.includes('user') && method === 'GET') {
             try {
                 const id = url.split('/')[3];
@@ -380,13 +374,10 @@ server.on("request", async (request, response) => {
             return;
         }
     }
-
-    // Handle static files
     
     // 1. Proteksi Halaman Admin
     if (url === '/admin' || url === '/pages/admin_page.html') {
         const user = getUserFromRequest(request);
-        // Kalau belum login ATAU bukan admin -> Tendang ke Login
         if (!user || user.role !== 'admin') {
             response.writeHead(302, { 'Location': '/login' });
             response.end();
@@ -397,7 +388,6 @@ server.on("request", async (request, response) => {
     // 2. Proteksi Halaman Dashboard, History, Booking
     if (url === '/dashboard' || url === '/history' || url === '/booking') {
         const user = getUserFromRequest(request);
-        // Kalau belum login -> Tendang ke Login
         if (!user || user.role !== "user") {
             response.writeHead(302, { 'Location': '/login' });
             response.end();
@@ -405,8 +395,7 @@ server.on("request", async (request, response) => {
         }
     }
 
-    // --- HANDLE STATIC FILES (Baru dijalankan setelah lolos cek di atas) ---
-    let folder = "./public";
+    const folder = "./public";
     let fileName = url;
 
     if (url === "/" || url === "/login") {

@@ -1,12 +1,12 @@
 document.getElementById("loginForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    // 1. Ambil data dari form HTML
+    //Ambil data dari form HTML
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
     try {
-        // 2. Kirim Request ke Server (INI BAGIAN YANG TADINYA HILANG)
+        //Kirim Request ke Server
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: {
@@ -17,11 +17,9 @@ document.getElementById("loginForm").addEventListener("submit", async function (
 
         const data = await response.json();
 
-        // 3. Cek respon dari server
+        // Cek respon dari server
         if (response.ok) {
-            // Login Berhasil!
-            // Simpan username untuk tampilan (opsional)
-            localStorage.setItem("username", data.username || "User");
+            localStorage.setItem("username", data.username || "User"); //Local storage untuk username
             
             // Redirect halaman sesuai role
             if (data.role === 'admin') {

@@ -1,13 +1,12 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Setup UI Logout (dari auth.js)
     if (typeof initUserDisplay === 'function') {
         initUserDisplay();
     }
 
-    // 2. Ambil data booking (sekalian cek apakah user = admin)
+    // Ambil data booking (sekalian cek apakah user = admin)
     fetchAdminBookings();
     
-    // 3. Setup Event Listener untuk tombol di dalam tabel (Event Delegation)
+    // Setup Event Listener untuk tombol di dalam tabel (Event Delegation)
     setupTableActions();
 });
 
@@ -16,7 +15,7 @@ async function fetchAdminBookings() {
     try {
         const response = await fetch('/api/bookings');
 
-        // Jika tidak login atau bukan admin (biasanya server redirect, tapi kita handle juga disini)
+        //otorisasi
         if (response.status === 401 || response.status === 403 || response.redirected) {
             alert('Akses ditolak. Silakan login sebagai Admin.');
             window.location.href = '/login';

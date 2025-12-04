@@ -1,22 +1,10 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    // 1. Tampilkan nama user & setup logout
+    // Tampilkan nama user & setup logout
     if (typeof initUserDisplay === 'function') {
-        initUserDisplay();
+        initUserDisplay(); //ongoing
     }
 
-    // 2. Cek session server (Cookie)
-    try {
-        const response = await fetch('/api/my-bookings');
-        if (response.status === 401) {
-            alert('Sesi habis, silakan login kembali.');
-            window.location.href = '/login';
-            return;
-        }
-    } catch (error) {
-        console.error("Gagal cek sesi:", error);
-    }
-
-    // 3. Load data ruangan
+    // Load data ruangan
     loadRooms();
 });
 
@@ -52,7 +40,6 @@ function renderRooms(rooms) {
             selectRoom(room.id);
         });
 
-        // Memastikan bawah path gambar benar
         const imagePath = room.image_path ? room.image_path : '../images/ruang-a/meetingroom-1.jpg';
 
         card.innerHTML = `
@@ -67,10 +54,7 @@ function renderRooms(rooms) {
 
 function selectRoom(roomId) {
     localStorage.setItem("selectedRoomId", roomId);
-
     loadRooms();
-
-    // Aktifkan tombol
     enableBookingButton(true);
 }
 
