@@ -164,19 +164,6 @@ async function updateTimeSlotAvailability() {
             }
         }
     });
-
-    if (durationSelect.value) {
-        const selectedOption = durationSelect.options[durationSelect.selectedIndex];
-        if (selectedOption.disabled) {
-            durationSelect.value = '';
-
-            if (isTodaySelected && isTimePassed(selectedOption.value)) {
-                alert('Waktu yang dipilih sudah lewat. Silakan pilih waktu lain.');
-            } else {
-                alert('Waktu yang dipilih sudah terisi. Silakan pilih waktu lain.');
-            }
-        }
-    }
 }
 
 function resetTimeSlots(selectElement) {
