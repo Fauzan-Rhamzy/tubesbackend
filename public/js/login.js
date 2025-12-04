@@ -1,12 +1,13 @@
 document.getElementById("loginForm").addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    //Ambil data dari form HTML
+    // ambil input
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    const msg = document.getElementById("msg");
 
     try {
-        //Kirim Request ke Server
+        // kirim request login
         const response = await fetch('/api/login', {
             method: 'POST',
             headers: {
@@ -15,21 +16,22 @@ document.getElementById("loginForm").addEventListener("submit", async function (
             body: JSON.stringify({ email, password })
         });
 
+        // tunggu response
         const data = await response.json();
 
-        // Cek respon dari server
+        // cek respon server
         if (response.ok) {
             localStorage.setItem("username", data.username || "User"); //Local storage untuk username
             
-            // Redirect halaman sesuai role
+            // redirect halaman sesuai role
             if (data.role === 'admin') {
                 window.location.href = "/admin";
             } else {
                 window.location.href = "/dashboard";
             }
         } else {
-            // Login Gagal (Password salah / Email tidak ada)
-            alert(data.message || "Login gagal");
+            msg.textContent = data.message;
+            msg.style.color = "red";
         }
     } catch (error) {
         console.error("Error:", error);
