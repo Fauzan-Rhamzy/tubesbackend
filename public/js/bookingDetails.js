@@ -133,15 +133,10 @@ async function updateTimeSlotAvailability() {
         return;
     }
 
-    console.log('Checking availability for room:', roomId, 'date:', bookingDate);
-
     // tanggal hari ini 
     const isTodaySelected = isToday(bookingDate);
 
     const bookedTimes = await checkAvailability(roomId, bookingDate);
-
-    console.log('Booked times:', bookedTimes);
-    console.log('Is today selected:', isTodaySelected);
 
     const options = durationSelect.querySelectorAll('option');
     options.forEach(option => {
@@ -163,7 +158,6 @@ async function updateTimeSlotAvailability() {
             if (isDisabled) {
                 option.disabled = true;
                 option.textContent = `${timeText} ${disableReason}`;
-                console.log('Disabling time slot:', timeText, disableReason);
             } else {
                 option.disabled = false;
                 option.textContent = timeText;
@@ -272,8 +266,6 @@ async function handleSubmit(event) {
         bookingTime: getBookingTimeText(duration.value),
         purpose: purpose.value.trim()
     };
-
-    console.log('Submitting booking:', bookingData);
 
     const result = await submitBooking(bookingData);
 
