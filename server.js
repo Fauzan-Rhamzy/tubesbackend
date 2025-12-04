@@ -40,7 +40,7 @@ server.on("request", async (request, response) => {
 
     // handle API requests
     if (url.startsWith('/api')) {
-        
+
         // handle logout, hapus cookie token nya
         if (url === '/api/logout' && method === 'POST') {
             response.writeHead(200, {
@@ -141,7 +141,7 @@ server.on("request", async (request, response) => {
                         `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
                          VALUES ($1, $2, $3, $4, $5, $6)
                          RETURNING *`,
-                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending'] 
+                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending']
                     );
 
                     response.writeHead(201, { 'Content-Type': 'application/json' });
@@ -239,23 +239,6 @@ server.on("request", async (request, response) => {
                     response.end(JSON.stringify({ message: 'Error mengupdate status' }));
                 }
             });
-            return;
-        }
-
-        // GET all users
-        if (url === '/api/users' && method === 'GET') {
-            try {
-                const result = await db.query(
-                    'SELECT id, username, email, role, created_at FROM users ORDER BY id ASC'
-                );
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
-            } catch (error) {
-                console.error('Error fetching users:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data users' }));
-            }
             return;
         }
 
@@ -381,7 +364,7 @@ server.on("request", async (request, response) => {
             return;
         }
     }
-    
+
     // proteksi halaman admin
     if (url === '/admin' || url === '/pages/admin_page.html') {
         const user = getUserFromRequest(request);
@@ -409,19 +392,19 @@ server.on("request", async (request, response) => {
     // handle request ke url untuk nampilin html
     if (url === "/" || url === "/login") {
         fileName = "/pages/login.html";
-    } 
+    }
     else if (url === "/dashboard") {
         fileName = "/pages/dashboard.html";
-    } 
+    }
     else if (url === "/admin") {
         fileName = "/pages/admin_page.html";
-    } 
+    }
     else if (url === "/history") {
         fileName = "/pages/history.html";
     }
     else if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
-    } 
+    }
     // handle css, js, atau image dari request html
     else {
         fileName = url;
@@ -455,7 +438,7 @@ server.on("request", async (request, response) => {
             response.end(content);
         }
     });
-}); 
+});
 
 server.listen(PORT, () => {
     console.log(`Server is listening on http://localhost:${PORT}`);
