@@ -6,38 +6,29 @@ document.addEventListener("DOMContentLoaded", () => {
     disableBookingButton();
 
     initUserDisplay();
-    
+
     const bookingButton = document.querySelector(".bookingButton");
 
     bookingButton.addEventListener("click", handleBooking);
 });
 
-function handleBooking(){
+function handleBooking() {
     window.location.href = "/booking";
 }
 
 // Fungsi untuk disable tombol booking
 function disableBookingButton() {
     const bookingButton = document.querySelector('.bookingButton');
-    if (bookingButton) {
-        bookingButton.classList.add('disabled');
-        bookingButton.style.pointerEvents = 'none';
-        bookingButton.style.cursor = 'not-allowed';
-    }
+    bookingButton.classList.add('disabled');
 }
 
 // Fungsi untuk enable tombol booking
 function enableBookingButton() {
     const bookingButton = document.querySelector('.bookingButton');
-    if (bookingButton) {
-        bookingButton.classList.remove('disabled');
-        bookingButton.style.pointerEvents = 'auto';
-        bookingButton.style.opacity = '1';
-        bookingButton.style.cursor = 'pointer';
-    }
+    bookingButton.classList.remove('disabled');
 }
 
-//Load data ruangan dari database 
+//Melakukan load ruangan dari database 
 async function loadRooms() {
     try {
         // Fetch data dari server.js
@@ -54,12 +45,12 @@ async function loadRooms() {
         // Menampilkan pesan error
         const container = document.querySelector('.room-options-container');
         if (container) {
-            container.innerHTML = '<p style="color: red;">Unable to load room data</p>';
+            container.innerHTML = 'Unable to load room data';
         }
     }
 }
 
-// Fungsi untuk menampilkan data ruangan ke HTML
+// menampilkan data ruangan ke HTML
 function displayRooms(rooms) {
     const container = document.querySelector('.room-options-container');
 
