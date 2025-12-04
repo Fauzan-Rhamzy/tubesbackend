@@ -318,6 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const today = new Date().toISOString().split("T")[0];
         bookingDate.setAttribute("min", today);
         bookingDate.addEventListener("change", updateTimeSlotAvailability);
+        bookingDate.value = today
     }
 
     const durationSelect = document.getElementById("duration");
