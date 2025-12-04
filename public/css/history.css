@@ -165,7 +165,6 @@ body {
     font-size: 14px;
     font-weight: bold;
     cursor: pointer;
-    margin-left: 12px;
     transition: 0.2s;
 }
 
@@ -184,4 +183,10 @@ body {
     height: 145px;
     object-fit: cover;
     border-radius: 10px;
+}
+
+#belum-ada-booking{
+    text-align:center; 
+    color:#666; 
+    margin-top:20px;
 }
