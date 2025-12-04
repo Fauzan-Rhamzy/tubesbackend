@@ -34,9 +34,9 @@ async function loadSelectedRoom() {
     }
 }
 
-// update tampilan ruangan di halaman booking detail
+// update gamabar ruangan di page bookingDetail
 function updateRoomDisplay(room) {
-    // Update gambar ruangan
+    // melakukan update gambar ruangan
     const roomImage = document.querySelector('.room-image img');
     if (roomImage) {
         roomImage.src = room.image_path;
@@ -74,7 +74,7 @@ function hideError(inputElement) {
     inputElement.classList.remove('error');
 }
 
-// Fungsi validasi input kosong
+// validasi input kosong
 function validateInput(inputElement) {
     if (!inputElement.value.trim()) {
         showError(inputElement);
@@ -84,7 +84,7 @@ function validateInput(inputElement) {
     return true;
 }
 
-// konversi value ke text waktu
+// konversi value ke text menjadi waktu 
 function getBookingTimeText(timeValue) {
     const timeMap = {
         '1': '08.00 - 11.00',
@@ -97,6 +97,7 @@ function getBookingTimeText(timeValue) {
 
 // ngecek apakah jam nya udah lewat
 function isTimePassed(timeValue) {
+    //Mengambil jam hari ini 
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -167,7 +168,7 @@ async function updateTimeSlotAvailability() {
 
     console.log('Checking availability for room:', roomId, 'date:', bookingDate);
 
-    // ngecek tanggal yang dipilih 
+    // mengecek tanggal yang dipilih 
     const isTodaySelected = isToday(bookingDate);
 
     const bookedTimes = await checkAvailability(roomId, bookingDate);
