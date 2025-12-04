@@ -9,14 +9,19 @@ const server = new http.Server();
 
 const SECRET_KEY = "rahasia";
 
+// method ambil objek 'user' dari cookie
 function getUserFromRequest(request) {
+    // ngambil cookie
     const cookieHeader = request.headers.cookie;
     if (!cookieHeader) return null;
 
+    // ngambil token
     const tokenCookie = cookieHeader.split(';').find(c => c.trim().startsWith('token='));
     if (!tokenCookie) return null;
 
+    // ambil value dari token
     const token = tokenCookie.split('=')[1];
+    // dekripsi
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
         return decoded;
@@ -26,6 +31,7 @@ function getUserFromRequest(request) {
 }
 
 server.on("request", async (request, response) => {
+    // terima request
     console.log(`Request received: ${request.method} ${request.url}`);
 
     const method = request.method;
@@ -321,7 +327,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // LOGIN API
+        // handle login
         if (url === '/api/login' && method === 'POST') {
             let body = '';
 
@@ -375,7 +381,7 @@ server.on("request", async (request, response) => {
         }
     }
     
-    // 1. Proteksi Halaman Admin
+    // proteksi halaman admin
     if (url === '/admin' || url === '/pages/admin_page.html') {
         const user = getUserFromRequest(request);
         if (!user || user.role !== 'admin') {
@@ -385,7 +391,7 @@ server.on("request", async (request, response) => {
         }
     }
 
-    // 2. Proteksi Halaman Dashboard, History, Booking
+    // proteksi halaman user
     if (url === '/dashboard' || url === '/history' || url === '/booking') {
         const user = getUserFromRequest(request);
         if (!user || user.role !== "user") {
@@ -395,20 +401,28 @@ server.on("request", async (request, response) => {
         }
     }
 
+    // set main directory nya
     const folder = "./public";
     let fileName = url;
 
+    // handle request ke url untuk nampilin html
     if (url === "/" || url === "/login") {
         fileName = "/pages/login.html";
-    } else if (url === "/dashboard") {
+    } 
+    else if (url === "/dashboard") {
         fileName = "/pages/dashboard.html";
-    } else if (url === "/admin") {
+    } 
+    else if (url === "/admin") {
         fileName = "/pages/admin_page.html";
-    } else if (url === "/history") {
+    } 
+    else if (url === "/history") {
         fileName = "/pages/history.html";
-    } else if (url === "/booking") {
+    }
+    else if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
-    } else {
+    } 
+    // handle css, js, atau image dari request html
+    else {
         fileName = url;
     }
 
@@ -427,8 +441,6 @@ server.on("request", async (request, response) => {
 
     const contentType = mimeTypes[fileExtension] || "text/plain";
 
-    // console.log("URL dari Browser:", url); // Opsional: matikan log biar ga berisik
-
     fs.readFile(filePath, (err, content) => {
         if (err) {
             response.writeHead(404);
@@ -438,7 +450,7 @@ server.on("request", async (request, response) => {
             response.end(content);
         }
     });
-}); // <--- Tutup server.on request
+}); 
 
 server.listen(PORT, () => {
     console.log(`Server is listening on http://localhost:${PORT}`);
