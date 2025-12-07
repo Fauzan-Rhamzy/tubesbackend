@@ -3,25 +3,21 @@ import fs from "node:fs";
 import path from "node:path";
 import db from "./db.js";
 import jwt from 'jsonwebtoken';
+import zlib from "node:zlib";
 
 const PORT = 3000;
 const server = new http.Server();
 
 const SECRET_KEY = "rahasia";
 
-// method ambil objek 'user' dari cookie
 function getUserFromRequest(request) {
-    // ngambil cookie
     const cookieHeader = request.headers.cookie;
     if (!cookieHeader) return null;
 
-    // ngambil token
     const tokenCookie = cookieHeader.split(';').find(c => c.trim().startsWith('token='));
     if (!tokenCookie) return null;
 
-    // ambil value dari token
     const token = tokenCookie.split('=')[1];
-    // dekripsi
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
         return decoded;
@@ -31,7 +27,6 @@ function getUserFromRequest(request) {
 }
 
 server.on("request", async (request, response) => {
-    // terima request
     console.log(`Request received: ${request.method} ${request.url}`);
 
     const method = request.method;
@@ -40,9 +35,10 @@ server.on("request", async (request, response) => {
 
     // handle API requests
     if (url.startsWith('/api')) {
-
-        // handle logout, hapus cookie token nya
+        
+        // --- API: LOGOUT (DIPERBAIKI POSISINYA DISINI) ---
         if (url === '/api/logout' && method === 'POST') {
+            // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
             response.writeHead(200, {
                 'Content-Type': 'application/json',
                 'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0'
@@ -51,7 +47,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET all bookings, untuk di page admin
+        // GET all bookings
         if (url === '/api/bookings' && method === 'GET') {
             try {
                 // Mengambil semua bookings
@@ -95,7 +91,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // CREATE booking, buat di page 
+        // CREATE booking
         if (url === '/api/bookings' && method === 'POST') {
             let body = '';
 
@@ -105,6 +101,7 @@ server.on("request", async (request, response) => {
 
             request.on('end', async () => {
                 try {
+                    // [UBAH] 1. Cek User dari Cookie
                     const user = getUserFromRequest(request);
                     if (!user) {
                         response.writeHead(401, { 'Content-Type': 'application/json' });
@@ -112,6 +109,7 @@ server.on("request", async (request, response) => {
                         return;
                     }
 
+                    // [UBAH] 2. Hapus 'userId' dari body, karena kita pakai user.id dari cookie
                     const { roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
 
                     // Validasi input
@@ -137,11 +135,12 @@ server.on("request", async (request, response) => {
                         return;
                     }
 
+                    // [UBAH] 3. Insert menggunakan user.id (dari cookie)
                     const result = await db.query(
                         `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
                          VALUES ($1, $2, $3, $4, $5, $6)
                          RETURNING *`,
-                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending']
+                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending'] // <--- Pakai user.id
                     );
 
                     response.writeHead(201, { 'Content-Type': 'application/json' });
@@ -159,60 +158,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET user bookings untuk history
-        if (url === '/api/my-bookings' && method === 'GET') {
-            const user = getUserFromRequest(request); 
-
-            if (!user) {
-                response.writeHead(401, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Anda belum login!' }));
-                return;
-            }
-
-            try {
-                const bookingsResult = await db.query(
-                    'SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC',
-                    [user.id]
-                );
-
-                //Tidak ada booking 
-                if (bookingsResult.rows.length === 0) {
-                    response.writeHead(200, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify([]));
-                    return;
-                }
-
-                const roomIds = bookingsResult.rows.map(b => b.room_id);
-                const roomsResult = await db.query(
-                    `SELECT * FROM rooms WHERE id = ANY($1)`,
-                    [roomIds]
-                );
-
-                const roomsMap = {};
-                roomsResult.rows.forEach(room => {
-                    roomsMap[room.id] = room;
-                });
-
-                const bookings = bookingsResult.rows.map(booking => {
-                    const room = roomsMap[booking.room_id] || {};
-                    return {
-                        ...booking,
-                        room_name: room.name,
-                        image_path: room.image_path
-                    };
-                });
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(bookings));
-            } catch (error) {
-                console.error('Error fetching my bookings:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error server' }));
-            }
-            return;
-        }
-
-        // UPDATE booking status di admin dan history
+        // UPDATE booking status
         const bookingStatusMatch = url.match(/\/api\/bookings\/(\d+)\/status/);
         if (bookingStatusMatch && method === 'POST') {
             const id = bookingStatusMatch[1];
@@ -238,6 +184,23 @@ server.on("request", async (request, response) => {
                     response.end(JSON.stringify({ message: 'Error mengupdate status' }));
                 }
             });
+            return;
+        }
+
+        // GET all users
+        if (url === '/api/users' && method === 'GET') {
+            try {
+                const result = await db.query(
+                    'SELECT id, username, email, role, created_at FROM users ORDER BY id ASC'
+                );
+
+                response.writeHead(200, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify(result.rows));
+            } catch (error) {
+                console.error('Error fetching users:', error);
+                response.writeHead(500, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ message: 'Error mengambil data users' }));
+            }
             return;
         }
 
@@ -285,7 +248,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET room by ID buat dashboard
+        // GET room by ID
         if (url.startsWith('/api/rooms/') && !url.includes('user') && method === 'GET') {
             try {
                 const id = url.split('/')[3];
@@ -310,7 +273,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // handle login
+        // LOGIN API
         if (url === '/api/login' && method === 'POST') {
             let body = '';
 
@@ -352,8 +315,7 @@ server.on("request", async (request, response) => {
 
                     response.end(JSON.stringify({
                         message: 'Login berhasil',
-                        role: user.role,
-                        username: user.username
+                        role: user.role
                     }));
                 } catch (error) {
                     console.error('Login error:', error);
@@ -365,9 +327,12 @@ server.on("request", async (request, response) => {
         }
     }
 
-    // proteksi halaman admin
+    // Handle static files
+    
+    // 1. Proteksi Halaman Admin
     if (url === '/admin' || url === '/pages/admin_page.html') {
         const user = getUserFromRequest(request);
+        // Kalau belum login ATAU bukan admin -> Tendang ke Login
         if (!user || user.role !== 'admin') {
             response.writeHead(302, { 'Location': '/login' });
             response.end();
@@ -375,47 +340,161 @@ server.on("request", async (request, response) => {
         }
     }
 
-    // proteksi halaman user
-    if (url === '/dashboard' || url === '/history' || url === '/booking') {
+    //History Page
+    if (url === '/history' && method === 'GET') {
         const user = getUserFromRequest(request);
         if (!user || user.role !== "user") {
             response.writeHead(302, { 'Location': '/login' });
             response.end();
             return;
         }
+
+        try {
+            //join booking + room
+            const booking_room = await db.query(
+                `SELECT 
+                    b.*, 
+                    r.name AS room_name,
+                    r.image_path
+                FROM bookings b
+                LEFT JOIN rooms r ON b.room_id = r.id
+                WHERE b.user_id = $1
+                ORDER BY b.created_at DESC`,
+                [user.id]
+            );
+
+            let card_history = "";
+
+            if (booking_room.rows.length === 0) {
+                card_history = `<p id="belum-ada-booking">There is no history booking data.</p>`;
+            } else {
+                booking_room.rows.forEach(item => {
+                    let statusLabel = item.status;
+                    switch (item.status) {
+                        case 'confirmed': statusLabel = "Approved"; break;
+                        case 'pending':   statusLabel = "Pending";  break;
+                        case 'rejected':  statusLabel = "Rejected"; break;
+                        case 'canceled':  statusLabel = "Canceled"; break;
+                    }
+
+                    const cancel_book = item.status === 'pending' || item.status === 'confirmed';
+
+                    const date = new Date(item.booking_date).toLocaleDateString('id-ID', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    });
+
+                    const image = item.image_path;
+
+                    card_history += `
+                    <div class="history-card">
+                        <div class="history-card-content">
+                            <div>
+                                <div class="room-name">${item.room_name}</div>
+                                <div class="detail">Date: ${date}</div>
+                                <div class="detail">Time: ${item.booking_time}</div>
+                                <div class="detail">Purpose: ${item.purpose}</div>
+                                <div class="status-booking">Status: ${statusLabel.toUpperCase()}</div>
+
+                                <div style="margin-top:12px;">
+                                    ${cancel_book ? `
+                                        <button class="btn-cancel-booking" onclick="cancelBooking(${item.id})">Cancel Booking</button>
+                                    ` : ""}
+                                </div>
+                            </div>
+
+                            <img class="history-image"
+                                src="${image}"
+                                onerror="this.src='../images/ruang-a/meetingroom-1.jpg'">
+                        </div>
+                    </div>`;
+                });
+            }
+
+            //baca history.html
+            const history_path = path.join("./public/pages/history.html");
+            let html_history = fs.readFileSync(history_path, 'utf8');
+
+            //Taro card di html
+            html_history = html_history.replace(
+                '<div class="container">', 
+                `<div class="container">
+                    <div class="header">
+                        <h1>Riwayat Booking</h1>
+                    </div>
+                    <div id="historyList" class="history-list">
+                        ${card_history}
+                    </div>
+                    
+
+                <script>
+                    function cancelBooking(id) {
+                        fetch("/api/bookings/" + id + "/status", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ status: "canceled" })
+                        })
+                        .then(res => res.json())
+                        .then(data => {
+                            alert(data.message || "Request berhasil");
+                            location.reload();
+                        })
+                        .catch(() => alert("Gagal cancel"));
+                    }
+                </script>
+                `
+            );
+            
+            //Compression
+            response.writeHead(200, {
+                "Content-Type": "text/html",
+                "Content-Encoding": "gzip"
+            });
+
+            const gzip = zlib.createGzip();
+            //stream
+            const { Readable } = await import("node:stream");
+            Readable.from([html_history]).pipe(gzip).pipe(response);
+
+        } catch (err) {
+            console.error("SSR history error:", err);
+            response.writeHead(500, { "Content-Type": "text/plain" });
+            response.end("Error rendering history page");
+        }
+        return;
     }
 
-    // set main directory nya
-    const folder = "./public";
+    // 2. Proteksi Halaman Dashboard, History, Booking
+    if (url === '/dashboard' || url === '/booking') {
+        const user = getUserFromRequest(request);
+        // Kalau belum login -> Tendang ke Login
+        if (!user) {
+            response.writeHead(302, { 'Location': '/login' });
+            response.end();
+            return;
+        }
+    }
+
+    // --- HANDLE STATIC FILES (Baru dijalankan setelah lolos cek di atas) ---
+    let folder = "./public";
     let fileName = url;
 
-    // handle request ke url untuk nampilin html
     if (url === "/" || url === "/login") {
         fileName = "/pages/login.html";
-    }
-    else if (url === "/dashboard") {
+    } else if (url === "/dashboard") {
         fileName = "/pages/dashboard.html";
-    }
-    else if (url === "/admin") {
+    } else if (url === "/admin") {
         fileName = "/pages/admin_page.html";
-    }
-    else if (url === "/history") {
+    } else if (url === "/history") {
         fileName = "/pages/history.html";
-    }
-    else if (url === "/booking") {
+    } else if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
-    }
-    // handle css, js, atau image dari request html
-    else {
+    } else {
         fileName = url;
     }
 
-    // buat direktori full menuju file
     const filePath = path.join(folder, fileName);
-    // ambil extension dari file
     const fileExtension = path.extname(filePath);
 
-    // mapping jenis extension dan nama content type nya
     const mimeTypes = {
         ".html": "text/html",
         ".css": "text/css",
@@ -426,8 +505,9 @@ server.on("request", async (request, response) => {
         ".webp": "image/webp",
     };
 
-    // ambil content ype berdasarkan mapping mimeTypes
     const contentType = mimeTypes[fileExtension] || "text/plain";
+
+    // console.log("URL dari Browser:", url); // Opsional: matikan log biar ga berisik
 
     fs.readFile(filePath, (err, content) => {
         if (err) {
@@ -438,7 +518,7 @@ server.on("request", async (request, response) => {
             response.end(content);
         }
     });
-});
+}); // <--- Tutup server.on request
 
 server.listen(PORT, () => {
     console.log(`Server is listening on http://localhost:${PORT}`);
