@@ -35,7 +35,7 @@ server.on("request", async (request, response) => {
 
     // handle API requests
     if (url.startsWith('/api')) {
-        
+
         // --- API: LOGOUT (DIPERBAIKI POSISINYA DISINI) ---
         if (url === '/api/logout' && method === 'POST') {
             // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
@@ -328,7 +328,7 @@ server.on("request", async (request, response) => {
     }
 
     // Handle static files
-    
+
     // 1. Proteksi Halaman Admin
     if (url === '/admin' || url === '/pages/admin_page.html') {
         const user = getUserFromRequest(request);
@@ -338,6 +338,173 @@ server.on("request", async (request, response) => {
             response.end();
             return;
         }
+    }
+
+    //dashboard page
+    if (url === '/dashboard' && method === 'GET') {
+        const user = getUserFromRequest(request);
+        if (!user) {
+            response.writeHead(302, { 'Location': '/login' });
+            response.end();
+            return;
+        }
+
+        try {
+            // Ambil data rooms dari database
+            const roomsResult = await db.query(
+                'SELECT id, name, image_path, capacity FROM rooms ORDER BY id ASC'
+            );
+
+            let roomCards = "";
+
+            if (roomsResult.rows.length === 0) {
+                roomCards = `<p>Belum ada ruangan tersedia.</p>`;
+            } else {
+                roomsResult.rows.forEach(room => {
+                    const imagePath = room.image_path;
+
+                    roomCards += `
+                <div class="room-option-card" data-room-id="${room.id}">
+                    <h3>${room.name}</h3>
+                    <img src="${imagePath}" alt="${room.name}">
+                    <p>Kapasitas: ${room.capacity} Orang</p>
+                </div>`;
+                });
+            }
+
+            // Baca file dashboard.html
+            const dashboardPath = path.join("./public/pages/dashboard.html");
+            let htmlDashboard = fs.readFileSync(dashboardPath, 'utf8');
+
+            // Replace container dengan konten yang sudah di-render
+            htmlDashboard = htmlDashboard.replace(
+                '<div class="container"></div>',
+                `<div class="container">
+                <div class="dashboardHeader">
+                    <h1>Dashboard</h1>
+                    <button class="bookingButton disabled" id="bookingButton" disabled>Booking</button>
+                </div>
+
+                <div class="dashboardContainer">
+                    <p class="chooseRoomTitle">Choose one of these rooms</p>
+                    <div class="room-options-container">
+                        ${roomCards}
+                    </div>
+                </div>
+
+                <script>
+                    document.addEventListener("DOMContentLoaded", () => {
+                        const cards = document.querySelectorAll(".room-option-card");
+                        const bookingBtn = document.getElementById("bookingButton");
+                        let selectedRoomId = null;
+
+                        // Event listener untuk setiap card
+                        cards.forEach(card => {
+                            card.addEventListener("click", () => {
+                                // Hapus active dari semua card
+                                cards.forEach(c => c.classList.remove("active"));
+                                
+                                // Tambahkan active ke card yang diklik
+                                card.classList.add("active");
+
+                                //Meyimpan roomID yang dipilih
+                                selectedRoomId = card.getAttribute("data-room-id");
+                                
+                                // Enable booking button
+                                bookingBtn.classList.remove("disabled");
+                                bookingBtn.disabled = false;
+                            });
+                        });
+
+                        // Ketika tombol booking diklik
+                        bookingBtn.addEventListener("click", () => {
+                            if (!bookingBtn.disabled) {
+                                window.location.href = "/booking?id=" + selectedRoomId
+                            }
+                        });
+                    });
+                </script>
+            </div>`
+            );
+
+            // Compression dengan gzip
+            response.writeHead(200, {
+                "Content-Type": "text/html",
+                "Content-Encoding": "gzip"
+            });
+
+            const gzip = zlib.createGzip();
+            const { Readable } = await import("node:stream");
+            Readable.from([htmlDashboard]).pipe(gzip).pipe(response);
+
+        } catch (err) {
+            response.writeHead(500, { "Content-Type": "text/plain" });
+            response.end("Error rendering dashboard page");
+        }
+        return;
+    }
+
+    //Booking Page
+    if (url.startsWith('/booking') && method === "GET") {
+        const user = getUserFromRequest(request);
+        if (!user || user.role !== "user") {
+            response.writeHead(302, { 'Location': '/login' });
+            response.end();
+            return;
+        }
+
+        //Mengambil room id dari query parameter url
+        try {
+            const query = new URL(request.url, `http://${request.headers.host}`);
+            const roomId = query.searchParams.get("id");
+
+            if (!roomId) {
+                response.writeHead(400, { "Content-Type": "text/plain" });
+                response.end("Room ID is required");
+                return;
+            }
+
+            //Mengambil data ruangan dari database berdasarkan id
+            const roomResult = await db.query(
+                'SELECT id, name, image_path, capacity FROM rooms WHERE id = $1',
+                [roomId]
+            );
+
+            if (roomResult.rows.length === 0) {
+                response.writeHead(404, { "Content-Type": "text/plain" });
+                response.end("Room not found");
+                return;
+            }
+
+            const room = roomResult.rows[0];
+
+            //Membaca file bookingHTML
+            const bookingPath = path.join("./public/pages/bookingDetail.html");
+            let htmlBooking = fs.readFileSync(bookingPath, 'utf8');
+
+            //Mengganti daftar ruangan pada dashboard html
+            htmlBooking = htmlBooking.replace('<!--ROOM_IMAGE-->', room.image_path);
+            htmlBooking = htmlBooking.replace('<!--ROOM_NAME-->', room.name);
+            htmlBooking = htmlBooking.replace('<!--ROOM_CAPACITY-->', `Capacity: ${room.capacity} people`)
+
+            htmlBooking = htmlBooking.replace(
+                `<input type="hidden" id="roomId" name="roomId" value="${room.id}">`
+            );
+
+            // Compression dengan gzip
+            response.writeHead(200, {
+                "Content-Type": "text/html",
+                "Content-Encoding": "gzip"
+            });
+
+            const gzip = zlib.createGzip();
+            const { Readable } = await import("node:stream");
+            Readable.from([htmlBooking]).pipe(gzip).pipe(response);
+        } catch (err) {
+            response.writeHead(500, { "Content-Type": "text/plain" });
+            response.end("Error rendering booking detail page");
+        }
+        return;
     }
 
     //History Page
@@ -372,9 +539,9 @@ server.on("request", async (request, response) => {
                     let statusLabel = item.status;
                     switch (item.status) {
                         case 'confirmed': statusLabel = "Approved"; break;
-                        case 'pending':   statusLabel = "Pending";  break;
-                        case 'rejected':  statusLabel = "Rejected"; break;
-                        case 'canceled':  statusLabel = "Canceled"; break;
+                        case 'pending': statusLabel = "Pending"; break;
+                        case 'rejected': statusLabel = "Rejected"; break;
+                        case 'canceled': statusLabel = "Canceled"; break;
                     }
 
                     const cancel_book = item.status === 'pending' || item.status === 'confirmed';
@@ -416,7 +583,7 @@ server.on("request", async (request, response) => {
 
             //Taro card di html
             html_history = html_history.replace(
-                '<div class="container">', 
+                '<div class="container">',
                 `<div class="container">
                     <div class="header">
                         <h1>Riwayat Booking</h1>
@@ -443,7 +610,7 @@ server.on("request", async (request, response) => {
                 </script>
                 `
             );
-            
+
             //Compression
             response.writeHead(200, {
                 "Content-Type": "text/html",
@@ -463,29 +630,14 @@ server.on("request", async (request, response) => {
         return;
     }
 
-    // 2. Proteksi Halaman Dashboard, History, Booking
-    if (url === '/dashboard' || url === '/booking') {
-        const user = getUserFromRequest(request);
-        // Kalau belum login -> Tendang ke Login
-        if (!user) {
-            response.writeHead(302, { 'Location': '/login' });
-            response.end();
-            return;
-        }
-    }
-
     // --- HANDLE STATIC FILES (Baru dijalankan setelah lolos cek di atas) ---
     let folder = "./public";
     let fileName = url;
 
     if (url === "/" || url === "/login") {
         fileName = "/pages/login.html";
-    } else if (url === "/dashboard") {
-        fileName = "/pages/dashboard.html";
     } else if (url === "/admin") {
         fileName = "/pages/admin_page.html";
-    } else if (url === "/history") {
-        fileName = "/pages/history.html";
     } else if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
     } else {
@@ -506,8 +658,6 @@ server.on("request", async (request, response) => {
     };
 
     const contentType = mimeTypes[fileExtension] || "text/plain";
-
-    // console.log("URL dari Browser:", url); // Opsional: matikan log biar ga berisik
 
     fs.readFile(filePath, (err, content) => {
         if (err) {
