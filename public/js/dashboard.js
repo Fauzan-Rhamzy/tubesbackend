@@ -1,75 +1,31 @@
-// document.addEventListener("DOMContentLoaded", async () => {
-//     // Tampilkan nama user & setup logout
-//     if (typeof initUserDisplay === 'function') {
-//         initUserDisplay(); //ongoing
-//     }
 
-//     // Load data ruangan
-//     loadRooms();
-// });
+document.addEventListener("DOMContentLoaded", () => {
+    const cards = document.querySelectorAll(".room-option-card");
+    const bookingBtn = document.getElementById("bookingButton");
+    let selectedRoomId = null;
 
-// async function loadRooms() {
-//     try {
-//         const response = await fetch('/api/rooms');
-//         if (!response.ok) throw new Error("Gagal mengambil data ruangan");
+    // Event listener untuk setiap card
+    cards.forEach(card => {
+        card.addEventListener("click", () => {
+            // Hapus active dari semua card
+            cards.forEach(c => c.classList.remove("active"));
+            
+            // Tambahkan active ke card yang diklik
+            card.classList.add("active");
 
-//         const rooms = await response.json();
-//         renderRooms(rooms);
-//     } catch (error) {
-//         console.error("Error:", error);
-//         document.querySelector(".room-options-container").innerHTML = "<p>Gagal memuat data ruangan.</p>";
-//     }
-// }
+            //Meyimpan roomID yang dipilih
+            selectedRoomId = card.getAttribute("data-room-id");
+            
+            // Enable booking button
+            bookingBtn.classList.remove("disabled");
+            bookingBtn.disabled = false;
+        });
+    });
 
-// function renderRooms(rooms) {
-//     const container = document.querySelector(".room-options-container");
-//     container.innerHTML = "";
-
-//     rooms.forEach(room => {
-//         const card = document.createElement("div");
-//         card.classList.add("room-option-card");
-
-//         // Cek selection dari localStorage
-//         const selectedId = localStorage.getItem("selectedRoomId");
-//         if (selectedId && parseInt(selectedId) === room.id) {
-//             card.classList.add("active");
-//             enableBookingButton(true);
-//         }
-
-//         card.addEventListener("click", () => {
-//             selectRoom(room.id);
-//         });
-
-//         const imagePath = room.image_path ? room.image_path : '../images/ruang-a/meetingroom-1.jpg';
-
-//         card.innerHTML = `
-//             <h3>${room.name}</h3>
-//             <img src="${imagePath}" alt="${room.name}" onerror="this.src='../images/ruang-a/meetingroom-1.jpg'">
-//             <p>Kapasitas: ${room.capacity} Orang</p>
-//         `;
-
-//         container.appendChild(card);
-//     });
-// }
-
-// function selectRoom(roomId) {
-//     localStorage.setItem("selectedRoomId", roomId);
-//     loadRooms();
-//     enableBookingButton(true);
-// }
-
-// function enableBookingButton(enable) {
-//     const btn = document.querySelector(".bookingButton");
-//     if (btn) {
-//         if (enable) {
-//             btn.classList.remove("disabled");
-//             btn.disabled = false;
-//             btn.onclick = () => {
-//                 window.location.href = "/booking";
-//             };
-//         } else {
-//             btn.classList.add("disabled");
-//             btn.disabled = true;
-//         }
-//     }
-// }
+    // Ketika tombol booking diklik
+    bookingBtn.addEventListener("click", () => {
+        if (!bookingBtn.disabled) {
+            window.location.href = "/booking?id=" + selectedRoomId
+        }
+    });
+});

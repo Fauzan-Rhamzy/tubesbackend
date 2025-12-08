@@ -3,8 +3,9 @@
     color: white;
 }
 
-.bookingButton:hover {
+.bookingButton:hover:not(:disabled){
     background-color: #2d8c3a;
+    opacity: 0.9;
 }
 
 .chooseRoomTitle {
@@ -37,10 +38,6 @@
     cursor: pointer;
     transition: 0.2s;
     text-decoration: none;
-}
-
-.bookingButton:hover {
-    opacity: 0.9;
 }
 
 .dateContainer {
