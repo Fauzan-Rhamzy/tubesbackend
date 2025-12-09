@@ -101,25 +101,22 @@ server.on("request", async (request, response) => {
 
             request.on('end', async () => {
                 try {
-                    // [UBAH] 1. Cek User dari Cookie
                     const user = getUserFromRequest(request);
-                    if (!user) {
-                        response.writeHead(401, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Silakan login terlebih dahulu' }));
+                    if (!user || user.role !== "user") {
+                        response.writeHead(302, { 'Location': '/login' });
+                        response.end();
                         return;
                     }
 
-                    // [UBAH] 2. Hapus 'userId' dari body, karena kita pakai user.id dari cookie
                     const { roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
 
-                    // Validasi input
                     if (!roomId || !bookingDate || !bookingTime || !purpose) {
                         response.writeHead(400, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Semua field harus diisi' }));
+                        response.end(JSON.stringify({ error: true }));
                         return;
                     }
 
-                    // Cek ketersediaan
+                    // Melakukan pengecekan ketersediaan ruangan 
                     const checkBooking = await db.query(
                         `SELECT * FROM bookings 
                          WHERE room_id = $1 
@@ -131,28 +128,27 @@ server.on("request", async (request, response) => {
 
                     if (checkBooking.rows.length > 0) {
                         response.writeHead(409, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Ruangan sudah dibooking' }));
+                        response.end(JSON.stringify({ error: true }));
                         return;
                     }
 
-                    // [UBAH] 3. Insert menggunakan user.id (dari cookie)
+                    // Melakukan insert ke dalam database 
                     const result = await db.query(
                         `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
                          VALUES ($1, $2, $3, $4, $5, $6)
                          RETURNING *`,
-                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending'] // <--- Pakai user.id
+                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending']
                     );
 
                     response.writeHead(201, { 'Content-Type': 'application/json' });
                     response.end(JSON.stringify({
-                        message: 'Booking berhasil dibuat',
                         booking: result.rows[0]
                     }));
 
                 } catch (error) {
                     console.error('Error creating booking:', error);
                     response.writeHead(500, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Error membuat booking' }));
+                    response.end(JSON.stringify({ error: true }));
                 }
             });
             return;
