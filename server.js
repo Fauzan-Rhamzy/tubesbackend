@@ -453,10 +453,7 @@ server.on("request", async (request, response) => {
             htmlBooking = htmlBooking.replace('<!--ROOM_IMAGE-->', room.image_path);
             htmlBooking = htmlBooking.replace('<!--ROOM_NAME-->', room.name);
             htmlBooking = htmlBooking.replace('<!--ROOM_CAPACITY-->', `Capacity: ${room.capacity} people`)
-
-            htmlBooking = htmlBooking.replace(
-                `<input type="hidden" id="roomId" name="roomId" value="${room.id}">`
-            );
+            htmlBooking = htmlBooking.replace('<!--ROOM_ID-->', room.id);
 
             // Compression dengan gzip
             response.writeHead(200, {

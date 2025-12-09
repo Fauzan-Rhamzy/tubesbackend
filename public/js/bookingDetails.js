@@ -23,10 +23,13 @@ function validateInput(inputElement) {
 async function handleSubmit(event) {
     event.preventDefault();
 
+    const roomId = document.getElementById('roomId');
+    const bookingDate = document.getElementById('bookingDate');
     const duration = document.getElementById('duration');
     const purpose = document.getElementById('purpose');
 
     let isValid = true;
+    isValid = validateInput(bookingDate) && isValid;
     isValid = validateInput(duration) && isValid;
     isValid = validateInput(purpose) && isValid;
 
@@ -41,13 +44,46 @@ async function handleSubmit(event) {
         return;
     }
 
-    const successPopup = document.getElementById("successPopup");
-    successPopup.classList.add('show');
+    //Mengirim ke server
+    try {
+        const response = await fetch('/api/bookings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                roomId: roomId.value,
+                bookingDate: bookingDate.value,
+                bookingTime: duration.value,
+                purpose: purpose.value
+            })
+        });
 
-    document.getElementById("popupOkBtn").onclick = function () {
-        successPopup.classList.remove('show');
-        window.location.href = "/history"
-    };
+        const data = await response.json();
+
+        if (response.ok) {
+            const successPopup = document.getElementById("successPopup");
+            successPopup.classList.add('show');
+            document.getElementById("popupOkBtn").onclick = function () {
+                successPopup.classList.remove('show');
+                window.location.href = "/history"
+            };
+        } else {
+            const unsuccessPopup = document.getElementById("unsuccessPopup");
+            if (unsuccessPopup) {
+                unsuccessPopup.classList.add('show');
+                document.getElementById("unsuccessOkBtn").onclick = function () {
+                    unsuccessPopup.classList.remove('show');
+                };
+            }
+        }
+    } catch (err) {
+        const unsuccessPopup = document.getElementById("unsuccessPopup");
+        if (unsuccessPopup) {
+            unsuccessPopup.classList.add('show');
+            document.getElementById("unsuccessOkBtn").onclick = function () {
+                unsuccessPopup.classList.remove('show');
+            };
+        }
+    }
 }
 
 function setupLiveValidation() {
