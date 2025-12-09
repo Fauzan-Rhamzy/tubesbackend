@@ -187,23 +187,6 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET all users
-        if (url === '/api/users' && method === 'GET') {
-            try {
-                const result = await db.query(
-                    'SELECT id, username, email, role, created_at FROM users ORDER BY id ASC'
-                );
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
-            } catch (error) {
-                console.error('Error fetching users:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data users' }));
-            }
-            return;
-        }
-
         // GET all rooms
         if (url === '/api/rooms' && method === 'GET') {
             try {
@@ -215,58 +198,6 @@ server.on("request", async (request, response) => {
                 response.end(JSON.stringify(result.rows));
             } catch (error) {
                 console.error('Error fetching rooms:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
-            }
-            return;
-        }
-
-        // GET booking availability by room and date
-        if (url.startsWith('/api/bookings/availability/') && method === 'GET') {
-            try {
-                const parts = url.split('/');
-                const roomId = parts[4];
-                const date = parts[5];
-
-                const result = await db.query(
-                    `SELECT booking_time FROM bookings 
-                     WHERE room_id = $1 
-                     AND booking_date = $2 
-                     AND status IN ('pending', 'approved')`,
-                    [roomId, date]
-                );
-
-                const bookedTimes = result.rows.map(row => row.booking_time);
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ bookedTimes }));
-            } catch (error) {
-                console.error('Error checking availability:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error checking availability' }));
-            }
-            return;
-        }
-
-        // GET room by ID
-        if (url.startsWith('/api/rooms/') && !url.includes('user') && method === 'GET') {
-            try {
-                const id = url.split('/')[3];
-                const result = await db.query(
-                    'SELECT id, name, image_path, capacity FROM rooms WHERE id = $1',
-                    [id]
-                );
-
-                if (result.rows.length === 0) {
-                    response.writeHead(404, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Ruangan tidak ditemukan' }));
-                    return;
-                }
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows[0]));
-            } catch (error) {
-                console.error('Error fetching room:', error);
                 response.writeHead(500, { 'Content-Type': 'application/json' });
                 response.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
             }
