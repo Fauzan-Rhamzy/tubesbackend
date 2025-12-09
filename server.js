@@ -367,7 +367,7 @@ server.on("request", async (request, response) => {
                 <div class="room-option-card" data-room-id="${room.id}">
                     <h3>${room.name}</h3>
                     <img src="${imagePath}" alt="${room.name}">
-                    <p>Kapasitas: ${room.capacity} Orang</p>
+                    <p>Capacity: ${room.capacity} Persons</p>
                 </div>`;
                 });
             }
