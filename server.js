@@ -374,7 +374,7 @@ server.on("request", async (request, response) => {
 
             // Baca file dashboard.html
             const dashboardPath = path.join("./public/pages/dashboard.html");
-            let htmlDashboard = fs.readFileSync(dashboardPath, 'utf8');
+            let htmlDashboard = fs.readFileSync(dashboardPath, 'utf8');     
 
             // Replace container dengan konten yang sudah di-render
             htmlDashboard = htmlDashboard.replace(
@@ -397,6 +397,7 @@ server.on("request", async (request, response) => {
             // Compression dengan gzip
             response.writeHead(200, {
                 "Content-Type": "text/html",
+                "transfer-encoding": "chunked",
                 "Content-Encoding": "gzip"
             });
 
@@ -538,7 +539,7 @@ server.on("request", async (request, response) => {
 
                             <img class="history-image"
                                 src="${image}"
-                                onerror="this.src='../images/ruang-a/meetingroom-1.jpg'">
+                                onerror="this.src='../images/ruang-a/default-room.webp'">
                         </div>
                     </div>`;
                 });

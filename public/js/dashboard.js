@@ -28,4 +28,4 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = "/booking?id=" + selectedRoomId
         }
     });
-});
+}); 
