@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS rooms;
+DROP TABLE IF EXISTS users;
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
@@ -21,9 +25,9 @@ CREATE TABLE rooms (
 
 -- insert data ruangan
 INSERT INTO rooms VALUES 
-(1, 'Meeting Room A', '../images/ruang-a/Meeting-Room-GST.webp', 10),
-(2, 'Conference Room B', '../images/ruang-a/194_1510807301.67.lg.png', 25),
-(3, 'Discussion Room C', '../images/ruang-a/meja-miting-kantor-ELSINTA-revisi-copy.jpg', 5);
+(1, 'Meeting Room A', '../images/ruang-a/Meeting-Room-a.webp', 10),
+(2, 'Conference Room B', '../images/ruang-a/conference-room-b.webp', 25),
+(3, 'Discussion Room C', '../images/ruang-a/discussion-room-c.webp', 5);
 
 CREATE TABLE bookings (
     id SERIAL PRIMARY KEY,

@@ -115,9 +115,9 @@
 //                 </div>
 
 //                 <img class="history-image" 
-//                      src="${item.image_path ? item.image_path : '../images/ruang-a/meetingroom-1.jpg'}" 
+//                      src="${item.image_path ? item.image_path : '../images/ruang-a/default-room.webp'}" 
 //                      alt="${item.room_name}"
-//                      onerror="this.src='../images/ruang-a/meetingroom-1.jpg'"> 
+//                      onerror="this.src='../images/ruang-a/default-room.webp'"> 
 //             </div>
 //         `;
 
