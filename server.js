@@ -426,7 +426,7 @@ server.on("request", async (request, response) => {
             //Mengganti daftar ruangan pada dashboard html
             htmlBooking = htmlBooking.replace('<!--ROOM_IMAGE-->', room.image_path);
             htmlBooking = htmlBooking.replace('<!--ROOM_NAME-->', room.name);
-            htmlBooking = htmlBooking.replace('<!--ROOM_CAPACITY-->', `Capacity: ${room.capacity} people`)
+            htmlBooking = htmlBooking.replace('<!--ROOM_CAPACITY-->', `Capacity: ${room.capacity} Persons`)
             htmlBooking = htmlBooking.replace('<!--ROOM_ID-->', room.id);
 
             htmlBooking = htmlBooking.replace(
