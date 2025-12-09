@@ -187,23 +187,6 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET all users
-        if (url === '/api/users' && method === 'GET') {
-            try {
-                const result = await db.query(
-                    'SELECT id, username, email, role, created_at FROM users ORDER BY id ASC'
-                );
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
-            } catch (error) {
-                console.error('Error fetching users:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data users' }));
-            }
-            return;
-        }
-
         // GET all rooms
         if (url === '/api/rooms' && method === 'GET') {
             try {
@@ -215,58 +198,6 @@ server.on("request", async (request, response) => {
                 response.end(JSON.stringify(result.rows));
             } catch (error) {
                 console.error('Error fetching rooms:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
-            }
-            return;
-        }
-
-        // GET booking availability by room and date
-        if (url.startsWith('/api/bookings/availability/') && method === 'GET') {
-            try {
-                const parts = url.split('/');
-                const roomId = parts[4];
-                const date = parts[5];
-
-                const result = await db.query(
-                    `SELECT booking_time FROM bookings 
-                     WHERE room_id = $1 
-                     AND booking_date = $2 
-                     AND status IN ('pending', 'approved')`,
-                    [roomId, date]
-                );
-
-                const bookedTimes = result.rows.map(row => row.booking_time);
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ bookedTimes }));
-            } catch (error) {
-                console.error('Error checking availability:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error checking availability' }));
-            }
-            return;
-        }
-
-        // GET room by ID
-        if (url.startsWith('/api/rooms/') && !url.includes('user') && method === 'GET') {
-            try {
-                const id = url.split('/')[3];
-                const result = await db.query(
-                    'SELECT id, name, image_path, capacity FROM rooms WHERE id = $1',
-                    [id]
-                );
-
-                if (result.rows.length === 0) {
-                    response.writeHead(404, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Ruangan tidak ditemukan' }));
-                    return;
-                }
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows[0]));
-            } catch (error) {
-                console.error('Error fetching room:', error);
                 response.writeHead(500, { 'Content-Type': 'application/json' });
                 response.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
             }
@@ -446,6 +377,49 @@ server.on("request", async (request, response) => {
 
             const room = roomResult.rows[0];
 
+            const today = new Date().toISOString().split('T')[0];
+            const bookingsResult = await db.query(
+                `SELECT booking_time FROM bookings 
+                    WHERE room_id = $1 
+                    AND booking_date = $2 
+                    AND status IN ('pending', 'approved')`,
+                [roomId, today]
+            );
+
+            const bookedTimes = bookingsResult.rows.map(row => row.booking_time);
+
+            //Mengecek waktu sekarang
+            const now = new Date();
+            const currentHour = now.getHours();
+            const currentMinutes = now.getMinutes();
+
+            //Membuat slot jam 
+            const timeSlots = [
+                { value: "08.00 - 11.00", start: 8 },
+                { value: "11.00 - 13.00", start: 11 },
+                { value: "13.00 - 15.00", start: 13 },
+                { value: "15.00 - 18.00", start: 15 }
+            ];
+
+            let optionsHtml = '<option value="">--Select Booking Time--</option>';
+
+            timeSlots.forEach(slot => {
+                const isBooked = bookedTimes.includes(slot.value);
+                const isPastTime = slot.start < currentHour || (slot.start === currentHour && currentMinutes > 0);
+
+                let disabled = '';
+                let label = slot.value;
+
+                if (isBooked) {
+                    disabled = 'disabled';
+                    label = `${slot.value} (Booked)`;
+                } else if (isPastTime) {
+                    disabled = 'disabled';
+                    label = `${slot.value} (Passed)`;
+                }
+                optionsHtml += `<option value="${slot.value}" ${disabled}>${label}</option>`;
+            });
+
             //Membaca file bookingHTML
             const bookingPath = path.join("./public/pages/bookingDetail.html");
             let htmlBooking = fs.readFileSync(bookingPath, 'utf8');
@@ -453,10 +427,12 @@ server.on("request", async (request, response) => {
             //Mengganti daftar ruangan pada dashboard html
             htmlBooking = htmlBooking.replace('<!--ROOM_IMAGE-->', room.image_path);
             htmlBooking = htmlBooking.replace('<!--ROOM_NAME-->', room.name);
-            htmlBooking = htmlBooking.replace('<!--ROOM_CAPACITY-->', `Capacity: ${room.capacity} people`)
+            htmlBooking = htmlBooking.replace('<!--ROOM_CAPACITY-->', `Capacity: ${room.capacity} Persons`)
+            htmlBooking = htmlBooking.replace('<!--ROOM_ID-->', room.id);
 
             htmlBooking = htmlBooking.replace(
-                `<input type="hidden" id="roomId" name="roomId" value="${room.id}">`
+                /<select id="duration" name="duration" required>[\s\S]*?<\/select>/,
+                `<select id="duration" name="duration" required>${optionsHtml}</select>`
             );
 
             // Compression dengan gzip

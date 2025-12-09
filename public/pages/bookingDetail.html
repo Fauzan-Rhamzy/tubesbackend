@@ -46,7 +46,7 @@
         </div>
 
         <form id="bookingForm">
-            <input type="hidden" id="roomId" name="roomId" value="1">
+            <input type="hidden" id="roomId" name="roomId" value="<!--ROOM_ID-->">
             <div class="info-box">
                 <p>Make sure you select an available date and time. Your booking will be confirmed by the admin.</p>
             </div>
@@ -63,10 +63,10 @@
                     <label for="duration">Booking Time*</label>
                     <select id="duration" name="duration" required>
                         <option value="">--Select Booking Time--</option>
-                        <option value="1">08.00 - 11.00</option>
-                        <option value="2">11.00 - 13.00</option>
-                        <option value="3">13.00 - 15.00</option>
-                        <option value="4">15.00 - 18.00</option>
+                        <option value="08.00 - 11.00">08.00 - 11.00</option>
+                        <option value="11.00 - 13.00">11.00 - 13.00</option>
+                        <option value="13.00 - 15.00">13.00 - 15.00</option>
+                        <option value="15.00 - 18.00">15.00 - 18.00</option>
                     </select>
                     <!-- error message jika user belum memilih durasi booking-->
                     <span class="error-message">Select Booking Time</span>
