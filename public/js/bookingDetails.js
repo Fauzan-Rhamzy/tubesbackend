@@ -1,7 +1,6 @@
-// Fungsi untuk load detail ruangan yang dipilih dari dashboard
+// load detail ruangan yang dipilih dari dashboard
 async function loadSelectedRoom() {
     try {
-        // Ambil ID ruangan dari localStorage
         const selectedRoomId = localStorage.getItem('selectedRoomId');
 
         if (!selectedRoomId) {
@@ -10,19 +9,15 @@ async function loadSelectedRoom() {
             return;
         }
 
-        // Fetch detail ruangan dari API
-        const response = await fetch(`http://localhost:3000/api/rooms/${selectedRoomId}`);
+        const response = await fetch(`/api/rooms/${selectedRoomId}`);
 
         if (!response.ok) {
             throw new Error('Failed to load room details');
         }
 
         const room = await response.json();
-
-        // Update data ruangan
         updateRoomDisplay(room);
 
-        // Set roomId ke hidden input
         const roomIdInput = document.getElementById('roomId');
         if (roomIdInput) {
             roomIdInput.value = room.id;
@@ -35,47 +30,37 @@ async function loadSelectedRoom() {
     }
 }
 
-// Fungsi untuk update tampilan ruangan di halaman booking detail
 function updateRoomDisplay(room) {
-    // Update gambar ruangan
     const roomImage = document.querySelector('.room-image img');
     if (roomImage) {
-        roomImage.src = room.image_path;
+        roomImage.src = room.image_path ? room.image_path : '../images/ruang-a/meetingroom-1.jpg';
         roomImage.alt = room.name;
+        roomImage.onerror = function () { this.src = '../images/ruang-a/meetingroom-1.jpg'; };
     }
 
-    // Update nama ruangan
     const roomName = document.querySelector('.room-name');
     if (roomName) {
         roomName.textContent = `Selected Room: ${room.name}`;
     }
 
-    // Update kapasitas ruangan
     const roomCapacity = document.querySelector('.room-capacity');
     if (roomCapacity) {
         roomCapacity.textContent = `Capacity: ${room.capacity} persons`;
     }
 }
 
-// Fungsi untuk menampilkan error
 function showError(inputElement) {
     const errorMessage = inputElement.parentElement.querySelector('.error-message');
-    if (errorMessage) {
-        errorMessage.classList.add('show');
-    }
+    if (errorMessage) errorMessage.classList.add('show');
     inputElement.classList.add('error');
 }
 
-// Fungsi untuk menyembunyikan error
 function hideError(inputElement) {
     const errorMessage = inputElement.parentElement.querySelector('.error-message');
-    if (errorMessage) {
-        errorMessage.classList.remove('show');
-    }
+    if (errorMessage) errorMessage.classList.remove('show');
     inputElement.classList.remove('error');
 }
 
-// Fungsi validasi input kosong
 function validateInput(inputElement) {
     if (!inputElement.value.trim()) {
         showError(inputElement);
@@ -85,7 +70,6 @@ function validateInput(inputElement) {
     return true;
 }
 
-// Fungsi untuk konversi value ke text waktu
 function getBookingTimeText(timeValue) {
     const timeMap = {
         '1': '08.00 - 11.00',
@@ -96,91 +80,106 @@ function getBookingTimeText(timeValue) {
     return timeMap[timeValue] || '';
 }
 
-// Cek ketersediaan waktu booking dari server
-// HANYA booking dengan status 'pending' atau 'approved' yang dianggap "booked"
+// Fungsi untuk cek apakah waktu sudah lewat
+function isTimePassed(timeValue) {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    // Mapping waktu mulai untuk setiap slot
+    const timeSlotStart = {
+        '1': 8 * 60,      // 08:00
+        '2': 11 * 60,     // 11:00
+        '3': 13 * 60,     // 13:00
+        '4': 15 * 60      // 15:00
+    };
+
+    const slotStartTime = timeSlotStart[timeValue];
+
+    // Lewat jika sudah lebih besar dari waktu slot
+    return currentTimeInMinutes >= slotStartTime;
+}
+
+function isToday(dateString) {
+    const selectedDate = new Date(dateString);
+    const today = new Date();
+
+    return selectedDate.getDate() === today.getDate() &&
+        selectedDate.getMonth() === today.getMonth() &&
+        selectedDate.getFullYear() === today.getFullYear();
+}
+
+// Cek ketersediaan waktu booking
 async function checkAvailability(roomId, date) {
     try {
-        const response = await fetch(`http://localhost:3000/api/bookings/availability/${roomId}/${date}`);
-
-        if (!response.ok) {
-            throw new Error('Failed to check availability');
-        }
-
+        const response = await fetch(`/api/bookings/availability/${roomId}/${date}`);
+        if (!response.ok) throw new Error('Failed to check availability');
         const data = await response.json();
-
-        // Server sekarang sudah filter status != 'rejected'
-        // Tapi kita bisa double-check di sini juga kalau perlu
         return data.bookedTimes || [];
-
     } catch (error) {
         console.error('Error checking availability:', error);
         return [];
     }
 }
 
-// Update dropdown waktu berdasarkan ketersediaan
 async function updateTimeSlotAvailability() {
     const roomId = document.getElementById('roomId').value;
     const bookingDate = document.getElementById('bookingDate').value;
     const durationSelect = document.getElementById('duration');
 
-    // Jika tanggal belum dipilih, reset semua option
     if (!bookingDate) {
-        const options = durationSelect.querySelectorAll('option');
-        options.forEach(option => {
-            if (option.value) {
-                option.disabled = false;
-                const originalText = getBookingTimeText(option.value);
-                if (originalText) {
-                    option.textContent = originalText;
-                }
-                option.style.color = '';
-                option.style.backgroundColor = '';
-            }
-        });
+        resetTimeSlots(durationSelect);
         return;
     }
 
-    console.log('Checking availability for room:', roomId, 'date:', bookingDate);
+    // tanggal hari ini 
+    const isTodaySelected = isToday(bookingDate);
 
-    // Cek waktu yang sudah dibooking dari database
-    // Hanya yang status != 'rejected' dan != 'cancelled'
     const bookedTimes = await checkAvailability(roomId, bookingDate);
 
-    console.log('Booked times (active only):', bookedTimes);
-
-    // Update semua option di dropdown
     const options = durationSelect.querySelectorAll('option');
     options.forEach(option => {
         if (option.value) {
             const timeText = getBookingTimeText(option.value);
+            let isDisabled = false;
+            let disableReason = '';
 
-            // Cek apakah waktu ini sudah dibooking (status aktif)
             if (bookedTimes.includes(timeText)) {
+                isDisabled = true;
+                disableReason = '(Already Booked)';
+            }
+
+            else if (isTodaySelected && isTimePassed(option.value)) {
+                isDisabled = true;
+                disableReason = '(Time Passed)';
+            }
+
+            if (isDisabled) {
                 option.disabled = true;
-                option.textContent = `${timeText} (Already Booked)`;
-                console.log('Disabling time slot:', timeText);
+                option.textContent = `${timeText} ${disableReason}`;
             } else {
                 option.disabled = false;
                 option.textContent = timeText;
             }
         }
     });
-
-    // Reset pilihan jika yang dipilih sudah dibooking
-    if (durationSelect.value) {
-        const selectedOption = durationSelect.options[durationSelect.selectedIndex];
-        if (selectedOption.disabled) {
-            durationSelect.value = '';
-            alert('The time you selected is already booked. Please choose another time.');
-        }
-    }
 }
 
-// Fungsi untuk submit booking ke server
+function resetTimeSlots(selectElement) {
+    const options = selectElement.querySelectorAll('option');
+    options.forEach(option => {
+        if (option.value) {
+            option.disabled = false;
+            option.textContent = getBookingTimeText(option.value);
+        }
+    });
+}
+
+// Fungsi Submit Booking ke Server
 async function submitBooking(bookingData) {
     try {
-        const response = await fetch('http://localhost:3000/api/bookings', {
+        const response = await fetch('/api/bookings', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -191,11 +190,15 @@ async function submitBooking(bookingData) {
         const result = await response.json();
 
         if (!response.ok) {
-            // Handle conflict (sudah dibooking dengan status aktif)
-            if (response.status === 409) {
-                throw new Error('This room has already been booked for the selected date and time. Please choose another time slot.');
+            if (response.status === 401) {
+                alert('Sesi anda telah berakhir. Silakan login kembali.');
+                window.location.href = '/login';
+                return { success: false };
             }
-            throw new Error(result.message || 'Failed to create booking');
+            if (response.status === 409) {
+                throw new Error('Ruangan sudah dibooking pada jam tersebut.');
+            }
+            throw new Error(result.message || 'Gagal membuat booking');
         }
 
         return { success: true, data: result };
@@ -206,7 +209,7 @@ async function submitBooking(bookingData) {
     }
 }
 
-// Handler untuk submit form
+// Handler Submit
 async function handleSubmit(event) {
     event.preventDefault();
 
@@ -216,114 +219,80 @@ async function handleSubmit(event) {
     const roomId = document.getElementById('roomId');
 
     let isValid = true;
-
-    // Validasi semua input
     isValid = validateInput(bookingDate) && isValid;
     isValid = validateInput(duration) && isValid;
     isValid = validateInput(purpose) && isValid;
 
     if (!isValid) {
-        // Tampilkan popup gagal
         const unsuccessPopup = document.getElementById("unsuccessPopup");
-        unsuccessPopup.classList.add('show');
-
-        // Tombol OK untuk menutup popup gagal
-        document.getElementById("unsuccessOkBtn").onclick = function () {
-            unsuccessPopup.classList.remove('show');
-        };
-
+        if (unsuccessPopup) {
+            unsuccessPopup.classList.add('show');
+            document.getElementById("unsuccessOkBtn").onclick = function () {
+                unsuccessPopup.classList.remove('show');
+            };
+        }
         return;
     }
 
-    // Cek apakah waktu yang dipilih sudah dibooking
-    const selectedOption = duration.options[duration.selectedIndex];
-    if (selectedOption.disabled) {
-        alert('The selected time is already booked. Please choose another time.');
-        return;
-    }
-
-    // Ambil userId dari localStorage (disimpan saat login)
-    const userId = localStorage.getItem('userId');
-
-    if (!userId) {
-        alert('Session expired. Please login again.');
-        window.location.href = '/login';
-        return;
-    }
-
-    // Siapkan data booking
     const bookingData = {
-        userId: parseInt(userId),
         roomId: parseInt(roomId.value),
         bookingDate: bookingDate.value,
         bookingTime: getBookingTimeText(duration.value),
         purpose: purpose.value.trim()
     };
 
-    console.log('Submitting booking:', bookingData);
-
-    // Submit booking ke server
     const result = await submitBooking(bookingData);
 
     if (result.success) {
-        // Menampilkan pop up sukses
         const successPopup = document.getElementById("successPopup");
-        successPopup.classList.add('show');
-
-        // Pindah halaman ke history.html
-        document.getElementById("popupOkBtn").onclick = function () {
+        if (successPopup) {
+            successPopup.classList.add('show');
+            document.getElementById("popupOkBtn").onclick = function () {
+                window.location.href = "/history";
+            };
+        } else {
             window.location.href = "/history";
-        };
-    } else {
-        // Tampilkan error message
-        alert(`Booking failed: ${result.error}`);
+        }
+    } else if (result.error) {
+        alert(`Booking Gagal: ${result.error}`);
     }
 }
 
-// Setup validasi real-time
 function setupLiveValidation() {
-    const inputs = [
-        "bookingDate",
-        "duration",
-        "purpose"
-    ];
-
+    const inputs = ["bookingDate", "duration", "purpose"];
     inputs.forEach(id => {
         const element = document.getElementById(id);
-
         if (!element) return;
-
-        // Validasi saat input berubah
         element.addEventListener("input", () => validateInput(element));
         element.addEventListener("change", () => validateInput(element));
     });
 }
 
-// Initialize saat halaman load
 document.addEventListener("DOMContentLoaded", () => {
-    // Load detail ruangan yang dipilih
     loadSelectedRoom();
 
-    // Setup submit button
     const submitBtn = document.querySelector(".btn-submit");
     if (submitBtn) {
         submitBtn.addEventListener("click", handleSubmit);
     }
 
-    // Setup live validation
     setupLiveValidation();
 
-    // Setup booking date dengan min date = hari ini
     const bookingDate = document.getElementById("bookingDate");
     if (bookingDate) {
         const today = new Date().toISOString().split("T")[0];
         bookingDate.setAttribute("min", today);
-
-        // Event listener untuk cek ketersediaan saat tanggal berubah
         bookingDate.addEventListener("change", updateTimeSlotAvailability);
+        bookingDate.value = today
     }
 
-    // Setup cancel button
+    const durationSelect = document.getElementById("duration");
+    if (durationSelect) {
+        if (bookingDate && bookingDate.value) {
+            updateTimeSlotAvailability();
+        }
+    }
+
     const cancelBtn = document.querySelector(".btn-cancel");
     if (cancelBtn) {
         cancelBtn.addEventListener("click", () => {
@@ -331,5 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    initUserDisplay();
+    if (typeof initUserDisplay === 'function') {
+        initUserDisplay();
+    }
 });

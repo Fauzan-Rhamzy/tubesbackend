@@ -1,4 +1,7 @@
+// public/js/auth.js
+
 function loadUsername() {
+    // Ambil nama dari localstorage (ongoing)
     const username = localStorage.getItem("username") || "User";
     const usernameDisplay = document.getElementById("usernameDisplay");
 
@@ -11,18 +14,30 @@ function setupLogout() {
     const logoutButton = document.getElementById("logoutButton");
 
     if (logoutButton) {
-        logoutButton.addEventListener("click", function (e) {
+        logoutButton.addEventListener("click", async function (e) {
             e.preventDefault();
 
-            // Hapus semua data user dari localStorage
-            localStorage.removeItem("username");
-            localStorage.removeItem("userId");
-            localStorage.removeItem("role");
-            localStorage.removeItem("email");
-            localStorage.removeItem("selectedRoomId");
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST'
+                });
 
-            // Redirect ke login
-            window.location.href = "/login";
+                if (response.ok) {
+                    // Hapus data sisa di localStorage
+                    localStorage.removeItem("username");
+                    localStorage.removeItem("selectedRoomId");
+                    localStorage.removeItem("userId"); // Jaga-jaga jika masih ada
+                    
+                    // Redirect ke halaman login
+                    window.location.href = "/login";
+                } else {
+                    console.error("Gagal logout di sisi server");
+                    window.location.href = "/login";
+                }
+            } catch (error) {
+                console.error("Error saat logout:", error);
+                window.location.href = "/login"; // Tetap redirect biar user tidak terjebak
+            }
         });
     }
 }
@@ -30,12 +45,4 @@ function setupLogout() {
 function initUserDisplay() {
     loadUsername();
     setupLogout();
-}
-
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        loadUsername,
-        setupLogout,
-        initUserDisplay
-    };
 }
