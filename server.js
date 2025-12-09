@@ -301,7 +301,7 @@ server.on("request", async (request, response) => {
 
             // Baca file dashboard.html
             const dashboardPath = path.join("./public/pages/dashboard.html");
-            let htmlDashboard = fs.readFileSync(dashboardPath, 'utf8');     
+            let htmlDashboard = fs.readFileSync(dashboardPath, 'utf8');
 
             // Replace container dengan konten yang sudah di-render
             htmlDashboard = htmlDashboard.replace(
@@ -373,19 +373,23 @@ server.on("request", async (request, response) => {
 
             const room = roomResult.rows[0];
 
-            const today = new Date().toISOString().split('T')[0];
+            // Ambil tanggal dari query parameter, atau gunakan hari ini sebagai default
+            const selectedDate = query.searchParams.get("date") || new Date().toISOString().split('T')[0];
+
             const bookingsResult = await db.query(
                 `SELECT booking_time FROM bookings 
-                    WHERE room_id = $1 
-                    AND booking_date = $2 
-                    AND status IN ('pending', 'approved')`,
-                [roomId, today]
+                WHERE room_id = $1 
+                AND booking_date = $2 
+                AND status IN ('pending', 'approved')`,
+                [roomId, selectedDate]
             );
 
             const bookedTimes = bookingsResult.rows.map(row => row.booking_time);
 
             //Mengecek waktu sekarang
             const now = new Date();
+            const today = new Date().toISOString().split('T')[0];
+            const isToday = selectedDate === today;
             const currentHour = now.getHours();
             const currentMinutes = now.getMinutes();
 
@@ -401,7 +405,8 @@ server.on("request", async (request, response) => {
 
             timeSlots.forEach(slot => {
                 const isBooked = bookedTimes.includes(slot.value);
-                const isPastTime = slot.start < currentHour || (slot.start === currentHour && currentMinutes > 0);
+                // Hanya cek isPastTime jika tanggal yang dipilih adalah hari ini
+                const isPastTime = isToday && (slot.start < currentHour || (slot.start === currentHour && currentMinutes > 0));
 
                 let disabled = '';
                 let label = slot.value;
