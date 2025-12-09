@@ -1,126 +1,126 @@
-document.addEventListener("DOMContentLoaded", () => {
-    if (typeof initUserDisplay === 'function') {
-        initUserDisplay();
-    }
-    fetchUserBookings();
-});
+// document.addEventListener("DOMContentLoaded", () => {
+//     if (typeof initUserDisplay === 'function') {
+//         initUserDisplay();
+//     }
+//     fetchUserBookings();
+// });
 
-async function fetchUserBookings() {
-    try {
-        const response = await fetch(`/api/my-bookings`);
+// async function fetchUserBookings() {
+//     try {
+//         const response = await fetch(`/api/my-bookings`);
 
-        if (!response.ok) {
-            throw new Error('Failed to fetxh booking data');
-        }
+//         if (!response.ok) {
+//             throw new Error('Failed to fetxh booking data');
+//         }
 
-        const bookings = await response.json();
-        renderHistory(bookings);
+//         const bookings = await response.json();
+//         renderHistory(bookings);
 
-    } catch (error) {
-        console.error('Error:', error);
-        document.getElementById("historyList").innerHTML = '<p style="text-align:center; color:red;">Gagal memuat riwayat booking.</p>';
-    }
-}
+//     } catch (error) {
+//         console.error('Error:', error);
+//         document.getElementById("historyList").innerHTML = '<p style="text-align:center; color:red;">Gagal memuat riwayat booking.</p>';
+//     }
+// }
 
-async function cancelBooking(id) {
-    const confirmCancel = confirm("Are you sure to cancel the booking?");
-    if (!confirmCancel) return;
+// async function cancelBooking(id) {
+//     const confirmCancel = confirm("Are you sure to cancel the booking?");
+//     if (!confirmCancel) return;
 
-    try {
-        const response = await fetch(`/api/bookings/${id}/status`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ status: 'canceled' })
-        });
+//     try {
+//         const response = await fetch(`/api/bookings/${id}/status`, {
+//             method: 'POST',
+//             headers: {
+//                 'Content-Type': 'application/json'
+//             },
+//             body: JSON.stringify({ status: 'canceled' })
+//         });
 
-        if (response.ok) {
-            alert("Booking has canceled!");
-            fetchUserBookings();
-        } else {
-            const result = await response.json();
-            alert(result.message || "Failed to cancel booking");
-        }
-    } catch (error) {
-        console.error('Error cancelling booking:', error);
-        alert("Failed connect to server");
-    }
-}
+//         if (response.ok) {
+//             alert("Booking has canceled!");
+//             fetchUserBookings();
+//         } else {
+//             const result = await response.json();
+//             alert(result.message || "Failed to cancel booking");
+//         }
+//     } catch (error) {
+//         console.error('Error cancelling booking:', error);
+//         alert("Failed connect to server");
+//     }
+// }
 
-function renderHistory(bookings) {
-    const list = document.getElementById("historyList");
-    list.innerHTML = "";
+// function renderHistory(bookings) {
+//     const list = document.getElementById("historyList");
+//     list.innerHTML = "";
 
-    if (bookings.length === 0) {
-        list.innerHTML = '<p id="belum-ada-booking">There is no history booking data.</p>';
-        return;
-    }
+//     if (bookings.length === 0) {
+//         list.innerHTML = '<p id="belum-ada-booking">There is no history booking data.</p>';
+//         return;
+//     }
 
-    bookings.forEach(item => {
-        const card = document.createElement("div");
-        card.classList.add("history-card");
+//     bookings.forEach(item => {
+//         const card = document.createElement("div");
+//         card.classList.add("history-card");
 
-        let statusClass = "";
-        let statusLabel = item.status;
+//         let statusClass = "";
+//         let statusLabel = item.status;
 
-        switch (item.status) {
-            case 'confirmed':
-                statusClass = "status-approved";
-                statusLabel = "Approved";
-                break;
-            case 'pending':
-                statusClass = "status-waiting";
-                statusLabel = "Pending";
-                break;
-            case 'rejected':
-                statusClass = "status-rejected";
-                statusLabel = "Rejected";
-                break;
-            case 'canceled':
-                statusClass = "status-rejected";
-                statusLabel = "Canceled";
-                break;
-            default:
-                statusClass = "status-waiting";
-                statusLabel = item.status;
-        }
+//         switch (item.status) {
+//             case 'confirmed':
+//                 statusClass = "status-approved";
+//                 statusLabel = "Approved";
+//                 break;
+//             case 'pending':
+//                 statusClass = "status-waiting";
+//                 statusLabel = "Pending";
+//                 break;
+//             case 'rejected':
+//                 statusClass = "status-rejected";
+//                 statusLabel = "Rejected";
+//                 break;
+//             case 'canceled':
+//                 statusClass = "status-rejected";
+//                 statusLabel = "Canceled";
+//                 break;
+//             default:
+//                 statusClass = "status-waiting";
+//                 statusLabel = item.status;
+//         }
 
-        const showCancel = (item.status === 'pending' || item.status === 'confirmed');
+//         const showCancel = (item.status === 'pending' || item.status === 'confirmed');
 
-        const dateObj = new Date(item.booking_date);
-        const formattedDate = dateObj.toLocaleDateString('id-ID', {
-            day: 'numeric', month: 'long', year: 'numeric'
-        });
+//         const dateObj = new Date(item.booking_date);
+//         const formattedDate = dateObj.toLocaleDateString('id-ID', {
+//             day: 'numeric', month: 'long', year: 'numeric'
+//         });
 
-        let timeLabel = item.booking_time;
+//         let timeLabel = item.booking_time;
 
-        card.innerHTML = `
-            <div class="history-card-content">
-                <div>
-                    <div class="room-name">${item.room_name}</div>
-                    <div class="detail">Date: ${formattedDate}</div>
-                    <div class="detail">Time: ${timeLabel}</div>
-                    <div class="detail">Purpose: ${item.purpose}</div>
-                    <div class="status-booking">Status: ${statusLabel.toUpperCase()}</div>
+//         card.innerHTML = `
+//             <div class="history-card-content">
+//                 <div>
+//                     <div class="room-name">${item.room_name}</div>
+//                     <div class="detail">Date: ${formattedDate}</div>
+//                     <div class="detail">Time: ${timeLabel}</div>
+//                     <div class="detail">Purpose: ${item.purpose}</div>
+//                     <div class="status-booking">Status: ${statusLabel.toUpperCase()}</div>
 
 
-                    <div style="margin-top:12px;">
-                        ${showCancel ? `
-                            <button class="btn-cancel-booking" onclick="cancelBooking(${item.id})">
-                                Cancel Booking
-                            </button>
-                        ` : ""}
-                    </div>
-                </div>
+//                     <div style="margin-top:12px;">
+//                         ${showCancel ? `
+//                             <button class="btn-cancel-booking" onclick="cancelBooking(${item.id})">
+//                                 Cancel Booking
+//                             </button>
+//                         ` : ""}
+//                     </div>
+//                 </div>
 
-                <img class="history-image" 
-                     src="${item.image_path ? item.image_path : '../images/ruang-a/meetingroom-1.jpg'}" 
-                     alt="${item.room_name}"
-                     onerror="this.src='../images/ruang-a/meetingroom-1.jpg'"> 
-            </div>
-        `;
+//                 <img class="history-image" 
+//                      src="${item.image_path ? item.image_path : '../images/ruang-a/default-room.webp'}" 
+//                      alt="${item.room_name}"
+//                      onerror="this.src='../images/ruang-a/default-room.webp'"> 
+//             </div>
+//         `;
 
-        list.appendChild(card);
-    });
-}
+//         list.appendChild(card);
+//     });
+// }

@@ -7,14 +7,14 @@
     <title>Dashboard</title>
     <link rel="stylesheet" href="../css/bookingDetail.css">
     <link rel="stylesheet" href="../css/dashboard.css">
-    <script src="../js/dashboard.js"></script>
+    <script src="../js/dashboard.js" defer></script>
     <script src="../js/auth.js"></script>
 </head>
 
 <body>
     <header class="main-header">
         <div class="header-left">
-            <img id="app-logo" src="../images/logo.png" alt="Logo Aplikasi">
+            <img id="app-logo" src="../images/logo.webp" alt="Logo Aplikasi">
         </div>
 
         <nav class="header-nav">
@@ -24,22 +24,14 @@
 
         <div class="header-right">
             <span id="usernameDisplay">Hi, User!</span>
-            <a href="/login" id="logoutButton" class="nav-link logout"><img id="logout_icon"
-                    src="../images/logout_icon.png" alt=""></a>
+            <a href="/login" id="logoutButton" class="nav-link logout">
+                <img id="logout_icon" src="../images/logout_icon.webp" alt="">
+            </a>
         </div>
     </header>
 
-    <div class="container">
-        <div class="dashboardHeader">
-            <h1>Dashboard</h1>
-            <button class="bookingButton disabled">Booking</button>
-        </div>
-
-        <div class="dashboardContainer">
-            <p class="chooseRoomTitle">Choose one of these rooms</p>
-            <div class="room-options-container"></div>
-        </div>
-    </div>
+    <!-- akan diisi dari server -->
+    <div class="container"></div>
 </body>
 
 </html>
