@@ -287,7 +287,6 @@ server.on("request", async (request, response) => {
 
             const room = roomResult.rows[0];
 
-            // Ambil tanggal dari query parameter, atau gunakan hari ini sebagai default
             const selectedDate = query.searchParams.get("date") || new Date().toISOString().split('T')[0];
 
             const bookingsResult = await db.query(
@@ -319,7 +318,6 @@ server.on("request", async (request, response) => {
 
             timeSlots.forEach(slot => {
                 const isBooked = bookedTimes.includes(slot.value);
-                // Hanya cek isPastTime jika tanggal yang dipilih adalah hari ini
                 const isPastTime = isToday && (slot.start < currentHour || (slot.start === currentHour && currentMinutes > 0));
 
                 let disabled = '';
