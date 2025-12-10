@@ -4,6 +4,7 @@ import path from "node:path";
 import db from "./db.js";
 import jwt from 'jsonwebtoken';
 import zlib from "node:zlib";
+import querystring from 'node:querystring';
 
 const PORT = 3000;
 const server = new http.Server();
@@ -32,6 +33,28 @@ server.on("request", async (request, response) => {
     const method = request.method;
     const url = request.url;
     const extension = path.extname(request.url);
+
+    if (url === '/admin/booking/update' && method === 'POST') {
+        let body = '';
+        request.on('data', chunk => {
+            body += chunk.toString();
+        });
+        request.on('end', async () => {
+            const parsedBody = querystring.parse(body);
+            const { booking_id, status } = parsedBody;
+
+            try {
+                await db.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, booking_id]);
+                response.writeHead(302, { 'Location': '/admin' });
+                response.end();
+            } catch (error) {
+                console.error('Error updating status:', error);
+                response.writeHead(500, { 'Content-Type': 'text/plain' });
+                response.end('Error updating status');
+            }
+        });
+        return;
+    }
 
     // handle API requests
     if (url.startsWith('/api')) {
@@ -87,115 +110,6 @@ server.on("request", async (request, response) => {
                 console.error('Error fetching bookings:', error);
                 response.writeHead(500, { 'Content-Type': 'application/json' });
                 response.end(JSON.stringify({ message: 'Error mengambil data booking' }));
-            }
-            return;
-        }
-
-        // CREATE booking
-        if (url === '/api/bookings' && method === 'POST') {
-            let body = '';
-
-            request.on('data', chunk => {
-                body += chunk.toString();
-            });
-
-            request.on('end', async () => {
-                try {
-                    const user = getUserFromRequest(request);
-                    if (!user || user.role !== "user") {
-                        response.writeHead(302, { 'Location': '/login' });
-                        response.end();
-                        return;
-                    }
-
-                    const { roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
-
-                    if (!roomId || !bookingDate || !bookingTime || !purpose) {
-                        response.writeHead(400, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ error: true }));
-                        return;
-                    }
-
-                    // Melakukan pengecekan ketersediaan ruangan 
-                    const checkBooking = await db.query(
-                        `SELECT * FROM bookings 
-                         WHERE room_id = $1 
-                         AND booking_date = $2 
-                         AND booking_time = $3 
-                         AND status IN ('pending', 'approved')`,
-                        [roomId, bookingDate, bookingTime]
-                    );
-
-                    if (checkBooking.rows.length > 0) {
-                        response.writeHead(409, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ error: true }));
-                        return;
-                    }
-
-                    // Melakukan insert ke dalam database 
-                    const result = await db.query(
-                        `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
-                         VALUES ($1, $2, $3, $4, $5, $6)
-                         RETURNING *`,
-                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending']
-                    );
-
-                    response.writeHead(201, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({
-                        booking: result.rows[0]
-                    }));
-
-                } catch (error) {
-                    console.error('Error creating booking:', error);
-                    response.writeHead(500, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ error: true }));
-                }
-            });
-            return;
-        }
-
-        // UPDATE booking status
-        const bookingStatusMatch = url.match(/\/api\/bookings\/(\d+)\/status/);
-        if (bookingStatusMatch && method === 'POST') {
-            const id = bookingStatusMatch[1];
-            let body = '';
-
-            request.on('data', chunk => {
-                body += chunk.toString();
-            });
-
-            request.on('end', async () => {
-                try {
-                    const { status } = JSON.parse(body);
-                    await db.query(
-                        'UPDATE bookings SET status = $1 WHERE id = $2',
-                        [status, id]
-                    );
-
-                    response.writeHead(200, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Status berhasil diupdate' }));
-                } catch (error) {
-                    console.error('Error updating status:', error);
-                    response.writeHead(500, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Error mengupdate status' }));
-                }
-            });
-            return;
-        }
-
-        // GET all rooms
-        if (url === '/api/rooms' && method === 'GET') {
-            try {
-                const result = await db.query(
-                    'SELECT id, name, image_path, capacity FROM rooms ORDER BY id ASC'
-                );
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
-            } catch (error) {
-                console.error('Error fetching rooms:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
             }
             return;
         }
@@ -452,6 +366,55 @@ server.on("request", async (request, response) => {
         return;
     }
 
+    // create booking 
+    if (url === "/booking" && method === "POST") {
+        let body = "";
+
+        request.on("data", chunk => body += chunk.toString());
+
+        request.on("end", async () => {
+            const user = getUserFromRequest(request);
+            if (!user || user.role !== "user") {
+                response.writeHead(302, { Location: "/login" });
+                return response.end();
+            }
+
+            const form = new URLSearchParams(body);
+
+            const roomId = form.get("roomId");
+            const bookingDate = form.get("bookingDate");
+            const bookingTime = form.get("duration");
+            const purpose = form.get("purpose");
+
+            // Validasi
+            if (!roomId || !bookingDate || !bookingTime) {
+                response.writeHead(400, { "Content-Type": "text/plain" });
+                return response.end("Incomplete form data.");
+            }
+
+            try {
+                // Insert ke database
+                await db.query(`
+                INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
+                VALUES ($1, $2, $3, $4, $5, 'pending')
+            `, [user.id, roomId, bookingDate, bookingTime, purpose]);
+
+                // Redirect ke history page
+                response.writeHead(302, {
+                    "Location": "/history"
+                });
+                response.end();
+
+            } catch (err) {
+                console.error("Error insert booking:", err);
+                response.writeHead(500, { "Content-Type": "text/plain" });
+                response.end("Error saving booking");
+            }
+        });
+
+        return;
+    }
+
     //History Page
     if (url === '/history' && method === 'GET') {
         const user = getUserFromRequest(request);
@@ -575,14 +538,118 @@ server.on("request", async (request, response) => {
         return;
     }
 
+    if (url === '/admin' && method === 'GET') {
+        const user = getUserFromRequest(request);
+        if (!user || user.role !== 'admin') {
+            response.writeHead(302, { 'Location': '/login' });
+            response.end();
+            return;
+        }
+
+        try {
+            const bookingsResult = await db.query(`
+                SELECT 
+                    b.id,
+                    u.username,
+                    r.name AS room_name,
+                    b.booking_date,
+                    b.booking_time,
+                    b.purpose,
+                    b.status
+                FROM bookings b
+                JOIN users u ON b.user_id = u.id
+                JOIN rooms r ON b.room_id = r.id
+                ORDER BY b.id ASC
+            `);
+
+            let tableRows = "";
+            if (bookingsResult.rows.length === 0) {
+                tableRows = `<tr><td colspan="8" style="text-align: center;">No booking requests found.</td></tr>`;
+            } else {
+                bookingsResult.rows.forEach(booking => {
+                    const date = new Date(booking.booking_date).toLocaleDateString('id-ID', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    });
+
+                    let statusClass = '';
+                    switch (booking.status) {
+                        case 'pending':
+                            statusClass = 'status-pending';
+                            break;
+                        case 'approved':
+                            statusClass = 'status-approved';
+                            break;
+                        case 'rejected':
+                            statusClass = 'status-rejected';
+                            break;
+                        case 'canceled':
+                            statusClass = 'status-canceled';
+                            break;
+                    }
+
+                    const isPending = booking.status === 'pending';
+                    const isActive = booking.status === 'pending' || booking.status === 'approved';
+
+                    tableRows += `
+                        <tr>
+                            <td>${booking.id}</td>
+                            <td>${booking.username}</td>
+                            <td>${booking.room_name}</td>
+                            <td>${date}</td>
+                            <td>${booking.booking_time}</td>
+                            <td>${booking.purpose}</td>
+                            <td class="status"><span class="${statusClass}">${booking.status}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                        <input type="hidden" name="booking_id" value="${booking.id}">
+                                        <input type="hidden" name="status" value="approved">
+                                        <button type="submit" class="btn btn-approve" ${!isPending ? 'disabled' : ''}>Approve</button>
+                                    </form>
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                        <input type="hidden" name="booking_id" value="${booking.id}">
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button type="submit" class="btn btn-reject" ${!isPending ? 'disabled' : ''}>Reject</button>
+                                    </form>
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                        <input type="hidden" name="booking_id" value="${booking.id}">
+                                        <input type="hidden" name="status" value="canceled">
+                                        <button type="submit" class="btn btn-cancel" ${!isActive ? 'disabled' : ''}>Cancel</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const adminPagePath = path.join("./public/pages/admin_page.html");
+            let htmlAdmin = fs.readFileSync(adminPagePath, 'utf8');
+
+            htmlAdmin = htmlAdmin.replace('<tbody>', `<tbody>${tableRows}`);
+
+            response.writeHead(200, {
+                "Content-Type": "text/html",
+                "Content-Encoding": "gzip"
+            });
+            const gzip = zlib.createGzip();
+            const { Readable } = await import("node:stream");
+            Readable.from([htmlAdmin]).pipe(gzip).pipe(response);
+
+        } catch (err) {
+            console.error("SSR admin error:", err);
+            response.writeHead(500, { "Content-Type": "text/plain" });
+            response.end("Error rendering admin page");
+        }
+        return;
+    }
+
     // --- HANDLE STATIC FILES (Baru dijalankan setelah lolos cek di atas) ---
     let folder = "./public";
     let fileName = url;
 
     if (url === "/" || url === "/login") {
         fileName = "/pages/login.html";
-    } else if (url === "/admin") {
-        fileName = "/pages/admin_page.html";
     } else if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
     } else {
