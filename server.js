@@ -446,13 +446,25 @@ server.on("request", async (request, response) => {
                 booking_room.rows.forEach(item => {
                     let statusLabel = item.status;
                     switch (item.status) {
-                        case 'confirmed': statusLabel = "Approved"; break;
-                        case 'pending': statusLabel = "Pending"; break;
-                        case 'rejected': statusLabel = "Rejected"; break;
-                        case 'canceled': statusLabel = "Canceled"; break;
+                        case 'approved': 
+                            statusLabel = "Approved"; 
+                            break;
+                        case 'pending': 
+                            statusLabel = "Pending"; 
+                            break;
+                        case 'rejected': 
+                            statusLabel = "Rejected"; 
+                            break;
+                        case 'canceled': 
+                            statusLabel = "Canceled"; 
+                            break;
                     }
 
-                    const cancel_book = item.status === 'pending' || item.status === 'confirmed';
+                    let cancel_book = false;
+
+                    if (item.status === 'pending' || item.status === 'approved') {
+                        cancel_book = true;
+                    }
 
                     const date = new Date(item.booking_date).toLocaleDateString('id-ID', {
                         day: 'numeric', month: 'long', year: 'numeric'
@@ -470,7 +482,7 @@ server.on("request", async (request, response) => {
                                 <div class="detail">Purpose: ${item.purpose}</div>
                                 <div class="status-booking">Status: ${statusLabel.toUpperCase()}</div>
 
-                                <div style="margin-top:12px;">
+                                <div class="cancel">
                                     ${cancel_book ? `
                                         <button class="btn-cancel-booking" onclick="cancelBooking(${item.id})">Cancel Booking</button>
                                     ` : ""}
