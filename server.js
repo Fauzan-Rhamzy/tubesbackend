@@ -32,29 +32,6 @@ server.on("request", async (request, response) => {
 
     const method = request.method;
     const url = request.url;
-    const extension = path.extname(request.url);
-
-    if (url === '/admin/booking/update' && method === 'POST') {
-        let body = '';
-        request.on('data', chunk => {
-            body += chunk.toString();
-        });
-        request.on('end', async () => {
-            const parsedBody = querystring.parse(body);
-            const { booking_id, status } = parsedBody;
-
-            try {
-                await db.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, booking_id]);
-                response.writeHead(302, { 'Location': '/admin' });
-                response.end();
-            } catch (error) {
-                console.error('Error updating status:', error);
-                response.writeHead(500, { 'Content-Type': 'text/plain' });
-                response.end('Error updating status');
-            }
-        });
-        return;
-    }
 
     // handle API requests
     if (url.startsWith('/api')) {
@@ -70,49 +47,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET all bookings
-        if (url === '/api/bookings' && method === 'GET') {
-            try {
-                // Mengambil semua bookings
-                const bookingsResult = await db.query(
-                    'SELECT * FROM bookings ORDER BY id ASC'
-                );
 
-                // Mengambil semua rooms dan users
-                const roomsResult = await db.query('SELECT * FROM rooms');
-                const usersResult = await db.query('SELECT id, username FROM users');
-
-                const roomsMap = {};
-                roomsResult.rows.forEach(room => {
-                    roomsMap[room.id] = room;
-                });
-
-                const usersMap = {};
-                usersResult.rows.forEach(user => {
-                    usersMap[user.id] = user;
-                });
-
-                // Menggabungkan data
-                const bookings = bookingsResult.rows.map(booking => {
-                    const room = roomsMap[booking.room_id] || {};
-                    const user = usersMap[booking.user_id] || {};
-                    return {
-                        ...booking,
-                        room_name: room.name,
-                        image_path: room.image_path,
-                        username: user.username
-                    };
-                });
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(bookings));
-            } catch (error) {
-                console.error('Error fetching bookings:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data booking' }));
-            }
-            return;
-        }
 
         // LOGIN API
         if (url === '/api/login' && method === 'POST') {
@@ -525,6 +460,31 @@ server.on("request", async (request, response) => {
         return;
     }
 
+
+    //update booking status di page admin
+    if (url === '/admin/booking/update' && method === 'POST') {
+        let body = '';
+        request.on('data', chunk => {
+            body += chunk.toString();
+        });
+        request.on('end', async () => {
+            const parsedBody = querystring.parse(body);
+            const { booking_id, status } = parsedBody;
+
+            try {
+                await db.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, booking_id]);
+                response.writeHead(302, { 'Location': '/admin' });
+                response.end();
+            } catch (error) {
+                console.error('Error updating status:', error);
+                response.writeHead(500, { 'Content-Type': 'text/plain' });
+                response.end('Error updating status');
+            }
+        });
+        return;
+    }
+
+    //page admin
     if (url === '/admin' && method === 'GET') {
         const user = getUserFromRequest(request);
         if (!user || user.role !== 'admin') {
@@ -534,6 +494,7 @@ server.on("request", async (request, response) => {
         }
 
         try {
+            //ambil dari db booking result nya di join sama user dan room
             const bookingsResult = await db.query(`
                 SELECT 
                     b.id,
@@ -548,16 +509,19 @@ server.on("request", async (request, response) => {
                 JOIN rooms r ON b.room_id = r.id
                 ORDER BY b.id ASC
             `);
-
+            
+            //inisiasi tabel kosong dan diisi 
             let tableRows = "";
             if (bookingsResult.rows.length === 0) {
                 tableRows = `<tr><td colspan="8" style="text-align: center;">No booking requests found.</td></tr>`;
             } else {
                 bookingsResult.rows.forEach(booking => {
+                    //convert date/string ke objek js date 
                     const date = new Date(booking.booking_date).toLocaleDateString('id-ID', {
                         day: 'numeric', month: 'long', year: 'numeric'
                     });
 
+                    //ngecek status terus masukin ke variabel
                     let statusClass = '';
                     switch (booking.status) {
                         case 'pending':
@@ -574,9 +538,11 @@ server.on("request", async (request, response) => {
                             break;
                     }
 
+                    //variabel boolean
                     const isPending = booking.status === 'pending';
                     const isActive = booking.status === 'pending' || booking.status === 'approved';
 
+                    //tabel tadi diisi dengan data yang udh diambil dari db
                     tableRows += `
                         <tr>
                             <td>${booking.id}</td>
@@ -610,16 +576,21 @@ server.on("request", async (request, response) => {
                 });
             }
 
+            //baca admin_page.html
             const adminPagePath = path.join("./public/pages/admin_page.html");
             let htmlAdmin = fs.readFileSync(adminPagePath, 'utf8');
 
+            //meng-inject pada <tbody>(dicari) dengan tabel yang sudah diisi
             htmlAdmin = htmlAdmin.replace('<tbody>', `<tbody>${tableRows}`);
 
+            //kompresi
             response.writeHead(200, {
                 "Content-Type": "text/html",
+                "Transfer-Encoding": "chunked",
                 "Content-Encoding": "gzip"
             });
             const gzip = zlib.createGzip();
+            //kirim dalam stream chunk
             const { Readable } = await import("node:stream");
             Readable.from([htmlAdmin]).pipe(gzip).pipe(response);
 
