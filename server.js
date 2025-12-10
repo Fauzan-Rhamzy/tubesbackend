@@ -267,12 +267,6 @@ server.on("request", async (request, response) => {
             const query = new URL(request.url, `http://${request.headers.host}`);
             const roomId = query.searchParams.get("id");
 
-            if (!roomId) {
-                response.writeHead(400, { "Content-Type": "text/plain" });
-                response.end("Room ID is required");
-                return;
-            }
-
             //Mengambil data ruangan dari database berdasarkan id
             const roomResult = await db.query(
                 'SELECT id, name, image_path, capacity FROM rooms WHERE id = $1',
@@ -287,7 +281,6 @@ server.on("request", async (request, response) => {
 
             const room = roomResult.rows[0];
 
-            // Ambil tanggal dari query parameter, atau gunakan hari ini sebagai default
             const selectedDate = query.searchParams.get("date") || new Date().toISOString().split('T')[0];
 
             const bookingsResult = await db.query(
@@ -319,7 +312,6 @@ server.on("request", async (request, response) => {
 
             timeSlots.forEach(slot => {
                 const isBooked = bookedTimes.includes(slot.value);
-                // Hanya cek isPastTime jika tanggal yang dipilih adalah hari ini
                 const isPastTime = isToday && (slot.start < currentHour || (slot.start === currentHour && currentMinutes > 0));
 
                 let disabled = '';
