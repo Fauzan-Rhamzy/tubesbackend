@@ -45,7 +45,7 @@
             </div>
         </div>
 
-        <form id="bookingForm">
+        <form id="bookingForm" method="POST" action="/booking">
             <input type="hidden" id="roomId" name="roomId" value="<!--ROOM_ID-->">
             <div class="info-box">
                 <p>Make sure you select an available date and time. Your booking will be confirmed by the admin.</p>
@@ -54,7 +54,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="bookingDate">Booking Date*</label>
-                    <input type="date" id="bookingDate" required>
+                    <input type="date" id="bookingDate" name="bookingDate" required>
                     <!-- error message jika user belum memilih tanggal booking-->
                     <span class="error-message">Select Booking Date</span>
                 </div>

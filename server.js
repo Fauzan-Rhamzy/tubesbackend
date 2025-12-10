@@ -114,86 +114,6 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // CREATE booking
-        if (url === '/api/bookings' && method === 'POST') {
-            let body = '';
-
-            request.on('data', chunk => {
-                body += chunk.toString();
-            });
-
-            request.on('end', async () => {
-                try {
-                    const user = getUserFromRequest(request);
-                    if (!user || user.role !== "user") {
-                        response.writeHead(302, { 'Location': '/login' });
-                        response.end();
-                        return;
-                    }
-
-                    const { roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
-
-                    if (!roomId || !bookingDate || !bookingTime || !purpose) {
-                        response.writeHead(400, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ error: true }));
-                        return;
-                    }
-
-                    // Melakukan pengecekan ketersediaan ruangan 
-                    const checkBooking = await db.query(
-                        `SELECT * FROM bookings 
-                         WHERE room_id = $1 
-                         AND booking_date = $2 
-                         AND booking_time = $3 
-                         AND status IN ('pending', 'approved')`,
-                        [roomId, bookingDate, bookingTime]
-                    );
-
-                    if (checkBooking.rows.length > 0) {
-                        response.writeHead(409, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ error: true }));
-                        return;
-                    }
-
-                    // Melakukan insert ke dalam database 
-                    const result = await db.query(
-                        `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
-                         VALUES ($1, $2, $3, $4, $5, $6)
-                         RETURNING *`,
-                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending']
-                    );
-
-                    response.writeHead(201, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({
-                        booking: result.rows[0]
-                    }));
-
-                } catch (error) {
-                    console.error('Error creating booking:', error);
-                    response.writeHead(500, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ error: true }));
-                }
-            });
-            return;
-        }
-
-        // GET all rooms
-        if (url === '/api/rooms' && method === 'GET') {
-            try {
-                const result = await db.query(
-                    'SELECT id, name, image_path, capacity FROM rooms ORDER BY id ASC'
-                );
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
-            } catch (error) {
-                console.error('Error fetching rooms:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
-            }
-            return;
-        }
-
         // LOGIN API
         if (url === '/api/login' && method === 'POST') {
             let body = '';
@@ -443,6 +363,55 @@ server.on("request", async (request, response) => {
             response.writeHead(500, { "Content-Type": "text/plain" });
             response.end("Error rendering booking detail page");
         }
+        return;
+    }
+
+    // create booking 
+    if (url === "/booking" && method === "POST") {
+        let body = "";
+
+        request.on("data", chunk => body += chunk.toString());
+
+        request.on("end", async () => {
+            const user = getUserFromRequest(request);
+            if (!user || user.role !== "user") {
+                response.writeHead(302, { Location: "/login" });
+                return response.end();
+            }
+
+            const form = new URLSearchParams(body);
+
+            const roomId = form.get("roomId");
+            const bookingDate = form.get("bookingDate");
+            const bookingTime = form.get("duration");
+            const purpose = form.get("purpose");
+
+            // Validasi
+            if (!roomId || !bookingDate || !bookingTime) {
+                response.writeHead(400, { "Content-Type": "text/plain" });
+                return response.end("Incomplete form data.");
+            }
+
+            try {
+                // Insert ke database
+                await db.query(`
+                INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
+                VALUES ($1, $2, $3, $4, $5, 'pending')
+            `, [user.id, roomId, bookingDate, bookingTime, purpose]);
+
+                // Redirect ke history page
+                response.writeHead(302, {
+                    "Location": "/history"
+                });
+                response.end();
+
+            } catch (err) {
+                console.error("Error insert booking:", err);
+                response.writeHead(500, { "Content-Type": "text/plain" });
+                response.end("Error saving booking");
+            }
+        });
+
         return;
     }
 
