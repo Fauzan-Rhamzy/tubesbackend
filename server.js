@@ -373,17 +373,17 @@ server.on("request", async (request, response) => {
                 booking_room.rows.forEach(item => {
                     let statusLabel = item.status;
                     switch (item.status) {
-                        case 'approved': 
-                            statusLabel = "Approved"; 
+                        case 'approved':
+                            statusLabel = "Approved";
                             break;
-                        case 'pending': 
-                            statusLabel = "Pending"; 
+                        case 'pending':
+                            statusLabel = "Pending";
                             break;
-                        case 'rejected': 
-                            statusLabel = "Rejected"; 
+                        case 'rejected':
+                            statusLabel = "Rejected";
                             break;
-                        case 'canceled': 
-                            statusLabel = "Canceled"; 
+                        case 'canceled':
+                            statusLabel = "Canceled";
                             break;
                     }
 
@@ -460,6 +460,35 @@ server.on("request", async (request, response) => {
         return;
     }
 
+    // UPDATE booking status di page history
+    const bookingStatusMatch = url.match(/\/api\/bookings\/(\d+)\/status/);
+    if (bookingStatusMatch && method === 'POST') {
+        const id = bookingStatusMatch[1];
+        let body = '';
+
+        request.on('data', chunk => {
+            body += chunk.toString();
+        });
+
+        request.on('end', async () => {
+            try {
+                const { status } = JSON.parse(body);
+                await db.query(
+                    'UPDATE bookings SET status = $1 WHERE id = $2',
+                    [status, id]
+                );
+
+                response.writeHead(200, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ message: 'Status berhasil diupdate' }));
+            } catch (error) {
+                console.error('Error updating status:', error);
+                response.writeHead(500, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ message: 'Error mengupdate status' }));
+            }
+        });
+        return;
+    }
+
 
     //update booking status di page admin
     if (url === '/admin/booking/update' && method === 'POST') {
@@ -512,7 +541,7 @@ server.on("request", async (request, response) => {
                 JOIN rooms r ON b.room_id = r.id
                 ORDER BY b.id ASC
             `);
-            
+
             //inisiasi tabel kosong dan diisi 
             let tableRows = "";
             if (bookingsResult.rows.length === 0) {
