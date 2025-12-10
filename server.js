@@ -4,6 +4,7 @@ import path from "node:path";
 import db from "./db.js";
 import jwt from 'jsonwebtoken';
 import zlib from "node:zlib";
+import querystring from 'node:querystring';
 
 const PORT = 3000;
 const server = new http.Server();
@@ -32,6 +33,28 @@ server.on("request", async (request, response) => {
     const method = request.method;
     const url = request.url;
     const extension = path.extname(request.url);
+
+    if (url === '/admin/booking/update' && method === 'POST') {
+        let body = '';
+        request.on('data', chunk => {
+            body += chunk.toString();
+        });
+        request.on('end', async () => {
+            const parsedBody = querystring.parse(body);
+            const { booking_id, status } = parsedBody;
+
+            try {
+                await db.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, booking_id]);
+                response.writeHead(302, { 'Location': '/admin' });
+                response.end();
+            } catch (error) {
+                console.error('Error updating status:', error);
+                response.writeHead(500, { 'Content-Type': 'text/plain' });
+                response.end('Error updating status');
+            }
+        });
+        return;
+    }
 
     // handle API requests
     if (url.startsWith('/api')) {
@@ -149,35 +172,6 @@ server.on("request", async (request, response) => {
                     console.error('Error creating booking:', error);
                     response.writeHead(500, { 'Content-Type': 'application/json' });
                     response.end(JSON.stringify({ error: true }));
-                }
-            });
-            return;
-        }
-
-        // UPDATE booking status
-        const bookingStatusMatch = url.match(/\/api\/bookings\/(\d+)\/status/);
-        if (bookingStatusMatch && method === 'POST') {
-            const id = bookingStatusMatch[1];
-            let body = '';
-
-            request.on('data', chunk => {
-                body += chunk.toString();
-            });
-
-            request.on('end', async () => {
-                try {
-                    const { status } = JSON.parse(body);
-                    await db.query(
-                        'UPDATE bookings SET status = $1 WHERE id = $2',
-                        [status, id]
-                    );
-
-                    response.writeHead(200, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Status berhasil diupdate' }));
-                } catch (error) {
-                    console.error('Error updating status:', error);
-                    response.writeHead(500, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Error mengupdate status' }));
                 }
             });
             return;
@@ -638,9 +632,21 @@ server.on("request", async (request, response) => {
                             <td class="status"><span class="${statusClass}">${booking.status}</span></td>
                             <td>
                                 <div class="action-buttons">
-                                    <button class="btn btn-approve" data-id="${booking.id}" ${!isPending ? 'disabled' : ''}>Approve</button>
-                                    <button class="btn btn-reject" data-id="${booking.id}" ${!isPending ? 'disabled' : ''}>Reject</button>
-                                    <button class="btn btn-cancel" data-id="${booking.id}" ${!isActive ? 'disabled' : ''}>Cancel</button>
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                        <input type="hidden" name="booking_id" value="${booking.id}">
+                                        <input type="hidden" name="status" value="approved">
+                                        <button type="submit" class="btn btn-approve" ${!isPending ? 'disabled' : ''}>Approve</button>
+                                    </form>
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                        <input type="hidden" name="booking_id" value="${booking.id}">
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button type="submit" class="btn btn-reject" ${!isPending ? 'disabled' : ''}>Reject</button>
+                                    </form>
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                        <input type="hidden" name="booking_id" value="${booking.id}">
+                                        <input type="hidden" name="status" value="canceled">
+                                        <button type="submit" class="btn btn-cancel" ${!isActive ? 'disabled' : ''}>Cancel</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

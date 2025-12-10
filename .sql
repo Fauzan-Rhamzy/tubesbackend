@@ -47,4 +47,7 @@ INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, sta
 (2, 1, '2024-05-20', '09:00-11:00', 'Team Meeting', 'approved'),
 (3, 2, '2024-05-21', '14:00-16:00', 'Client Presentation', 'pending'),
 (2, 3, '2024-05-22', '10:00-12:00', 'Project Discussion', 'approved'),
-(3, 1, '2024-05-23', '11:00-13:00', 'Quarterly Review', 'rejected');
+(3, 1, '2024-05-23', '11:00-13:00', 'Quarterly Review', 'rejected'),
+(2, 2, '2024-05-24', '09:00-11:00', 'Internal Training', 'pending'),
+(3, 3, '2024-05-25', '14:00-16:00', 'UX/UI Design Review', 'approved'),
+(2, 1, '2024-05-26', '10:00-12:00', 'Sprint Planning', 'pending');
