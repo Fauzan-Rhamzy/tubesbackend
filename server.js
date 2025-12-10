@@ -411,8 +411,7 @@ server.on("request", async (request, response) => {
             }
 
             //baca history.html
-            const history_path = path.join("./public/pages/history.html");
-            let html_history = fs.readFileSync(history_path, 'utf8');
+            let html_history = fs.readFileSync("./public/pages/history.html", 'utf8');
 
             //Taro card di html
             html_history = html_history.replace(
@@ -424,39 +423,23 @@ server.on("request", async (request, response) => {
                     <div id="historyList" class="history-list">
                         ${card_history}
                     </div>
-                    
-
-                <script>
-                    function cancelBooking(id) {
-                        fetch("/api/bookings/" + id + "/status", {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ status: "canceled" })
-                        })
-                        .then(res => res.json())
-                        .then(data => {
-                            alert(data.message || "Request berhasil");
-                            location.reload();
-                        })
-                        .catch(() => alert("Gagal cancel"));
-                    }
-                </script>
                 `
             );
             
             //Compression
             response.writeHead(200, {
                 "Content-Type": "text/html",
-                "Content-Encoding": "gzip"
+                "transfer-encoding": "chunked",
+                "Content-Encoding": "gzip",
             });
 
             const gzip = zlib.createGzip();
-            //stream
+            //kirim html dalam stream
             const { Readable } = await import("node:stream");
             Readable.from([html_history]).pipe(gzip).pipe(response);
 
         } catch (err) {
-            console.error("SSR history error:", err);
+            console.error("Error:", err);
             response.writeHead(500, { "Content-Type": "text/plain" });
             response.end("Error rendering history page");
         }
