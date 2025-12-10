@@ -575,14 +575,106 @@ server.on("request", async (request, response) => {
         return;
     }
 
+    if (url === '/admin' && method === 'GET') {
+        const user = getUserFromRequest(request);
+        if (!user || user.role !== 'admin') {
+            response.writeHead(302, { 'Location': '/login' });
+            response.end();
+            return;
+        }
+
+        try {
+            const bookingsResult = await db.query(`
+                SELECT 
+                    b.id,
+                    u.username,
+                    r.name AS room_name,
+                    b.booking_date,
+                    b.booking_time,
+                    b.purpose,
+                    b.status
+                FROM bookings b
+                JOIN users u ON b.user_id = u.id
+                JOIN rooms r ON b.room_id = r.id
+                ORDER BY b.id ASC
+            `);
+
+            let tableRows = "";
+            if (bookingsResult.rows.length === 0) {
+                tableRows = `<tr><td colspan="8" style="text-align: center;">No booking requests found.</td></tr>`;
+            } else {
+                bookingsResult.rows.forEach(booking => {
+                    const date = new Date(booking.booking_date).toLocaleDateString('id-ID', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    });
+
+                    let statusClass = '';
+                    switch (booking.status) {
+                        case 'pending':
+                            statusClass = 'status-pending';
+                            break;
+                        case 'approved':
+                            statusClass = 'status-approved';
+                            break;
+                        case 'rejected':
+                            statusClass = 'status-rejected';
+                            break;
+                        case 'canceled':
+                            statusClass = 'status-canceled';
+                            break;
+                    }
+
+                    const isPending = booking.status === 'pending';
+                    const isActive = booking.status === 'pending' || booking.status === 'approved';
+
+                    tableRows += `
+                        <tr>
+                            <td>${booking.id}</td>
+                            <td>${booking.username}</td>
+                            <td>${booking.room_name}</td>
+                            <td>${date}</td>
+                            <td>${booking.booking_time}</td>
+                            <td>${booking.purpose}</td>
+                            <td class="status"><span class="${statusClass}">${booking.status}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn btn-approve" data-id="${booking.id}" ${!isPending ? 'disabled' : ''}>Approve</button>
+                                    <button class="btn btn-reject" data-id="${booking.id}" ${!isPending ? 'disabled' : ''}>Reject</button>
+                                    <button class="btn btn-cancel" data-id="${booking.id}" ${!isActive ? 'disabled' : ''}>Cancel</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const adminPagePath = path.join("./public/pages/admin_page.html");
+            let htmlAdmin = fs.readFileSync(adminPagePath, 'utf8');
+
+            htmlAdmin = htmlAdmin.replace('<tbody>', `<tbody>${tableRows}`);
+
+            response.writeHead(200, {
+                "Content-Type": "text/html",
+                "Content-Encoding": "gzip"
+            });
+            const gzip = zlib.createGzip();
+            const { Readable } = await import("node:stream");
+            Readable.from([htmlAdmin]).pipe(gzip).pipe(response);
+
+        } catch (err) {
+            console.error("SSR admin error:", err);
+            response.writeHead(500, { "Content-Type": "text/plain" });
+            response.end("Error rendering admin page");
+        }
+        return;
+    }
+
     // --- HANDLE STATIC FILES (Baru dijalankan setelah lolos cek di atas) ---
     let folder = "./public";
     let fileName = url;
 
     if (url === "/" || url === "/login") {
         fileName = "/pages/login.html";
-    } else if (url === "/admin") {
-        fileName = "/pages/admin_page.html";
     } else if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
     } else {

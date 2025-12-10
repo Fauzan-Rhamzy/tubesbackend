@@ -41,3 +41,10 @@ CREATE TABLE bookings (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (room_id) REFERENCES rooms(id)
 );
+
+-- Insert data bookings
+INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status) VALUES
+(2, 1, '2024-05-20', '09:00-11:00', 'Team Meeting', 'approved'),
+(3, 2, '2024-05-21', '14:00-16:00', 'Client Presentation', 'pending'),
+(2, 3, '2024-05-22', '10:00-12:00', 'Project Discussion', 'approved'),
+(3, 1, '2024-05-23', '11:00-13:00', 'Quarterly Review', 'rejected');
