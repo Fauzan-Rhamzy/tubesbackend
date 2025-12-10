@@ -196,6 +196,10 @@ body {
     border-radius: 10px
 }
 
+.cancel{
+    margin-top:12px;
+}
+
 /* * {
     margin: 0;
     padding: 0;
