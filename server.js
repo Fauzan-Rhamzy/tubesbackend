@@ -464,14 +464,17 @@ server.on("request", async (request, response) => {
     //update booking status di page admin
     if (url === '/admin/booking/update' && method === 'POST') {
         let body = '';
+        //menerima data form dalam chunk
         request.on('data', chunk => {
             body += chunk.toString();
         });
         request.on('end', async () => {
+            //parse dari url encoded menjadi objek js 
             const parsedBody = querystring.parse(body);
             const { booking_id, status } = parsedBody;
 
             try {
+                //perintah sql update si booking status dan minta redirect ke page admin biar refresh
                 await db.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, booking_id]);
                 response.writeHead(302, { 'Location': '/admin' });
                 response.end();
