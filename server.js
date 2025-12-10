@@ -267,12 +267,6 @@ server.on("request", async (request, response) => {
             const query = new URL(request.url, `http://${request.headers.host}`);
             const roomId = query.searchParams.get("id");
 
-            if (!roomId) {
-                response.writeHead(400, { "Content-Type": "text/plain" });
-                response.end("Room ID is required");
-                return;
-            }
-
             //Mengambil data ruangan dari database berdasarkan id
             const roomResult = await db.query(
                 'SELECT id, name, image_path, capacity FROM rooms WHERE id = $1',
