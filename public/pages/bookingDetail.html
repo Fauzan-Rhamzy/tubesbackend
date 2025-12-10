@@ -13,7 +13,7 @@
 <body>
     <header class="main-header">
         <div class="header-left">
-            <img id="app-logo" src="../images/logo.png" alt="Logo Aplikasi">
+            <img id="app-logo" src="../images/logo.webp" alt="Logo Aplikasi">
         </div>
 
         <nav class="header-nav">
@@ -24,7 +24,7 @@
         <div class="header-right">
             <span id="usernameDisplay">Hi, User!</span>
             <a href="/login" id="logoutButton" class="nav-link logout"><img id="logout_icon"
-                    src="../images/logout_icon.png" alt=""></a>
+                    src="../images/logout_icon.webp" alt=""></a>
         </div>
     </header>
 
@@ -35,20 +35,18 @@
         </div>
 
         <div class="room-image">
-            <!-- Image akan diisi otomatis dari js -->
-            <img src="" alt="Room Image">
+            <img src="<!--ROOM_IMAGE-->" alt="Room Image">
         </div>
 
-        <!-- diisi secara otomatis dari js -->
         <div class="room-info">
             <div>
-                <span class="room-name"></span>
-                <span class="room-capacity"></span>
+                <span class="room-name"><!--ROOM_NAME--></span>
+                <span class="room-capacity"><!--ROOM_CAPACITY--></span>
             </div>
         </div>
 
-        <form id="bookingForm">
-            <input type="hidden" id="roomId" name="roomId" value="1">
+        <form id="bookingForm" method="POST" action="/booking">
+            <input type="hidden" id="roomId" name="roomId" value="<!--ROOM_ID-->">
             <div class="info-box">
                 <p>Make sure you select an available date and time. Your booking will be confirmed by the admin.</p>
             </div>
@@ -56,7 +54,7 @@
             <div class="form-row">
                 <div class="form-group">
                     <label for="bookingDate">Booking Date*</label>
-                    <input type="date" id="bookingDate" required>
+                    <input type="date" id="bookingDate" name="bookingDate" required>
                     <!-- error message jika user belum memilih tanggal booking-->
                     <span class="error-message">Select Booking Date</span>
                 </div>
@@ -65,10 +63,10 @@
                     <label for="duration">Booking Time*</label>
                     <select id="duration" name="duration" required>
                         <option value="">--Select Booking Time--</option>
-                        <option value="1">08.00 - 11.00</option>
-                        <option value="2">11.00 - 13.00</option>
-                        <option value="3">13.00 - 15.00</option>
-                        <option value="4">15.00 - 18.00</option>
+                        <option value="08.00 - 11.00">08.00 - 11.00</option>
+                        <option value="11.00 - 13.00">11.00 - 13.00</option>
+                        <option value="13.00 - 15.00">13.00 - 15.00</option>
+                        <option value="15.00 - 18.00">15.00 - 18.00</option>
                     </select>
                     <!-- error message jika user belum memilih durasi booking-->
                     <span class="error-message">Select Booking Time</span>

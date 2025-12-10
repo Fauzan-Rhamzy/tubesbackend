@@ -4,6 +4,7 @@ import path from "node:path";
 import db from "./db.js";
 import jwt from 'jsonwebtoken';
 import zlib from "node:zlib";
+import querystring from 'node:querystring';
 
 const PORT = 3000;
 const server = new http.Server();
@@ -33,9 +34,31 @@ server.on("request", async (request, response) => {
     const url = request.url;
     const extension = path.extname(request.url);
 
+    if (url === '/admin/booking/update' && method === 'POST') {
+        let body = '';
+        request.on('data', chunk => {
+            body += chunk.toString();
+        });
+        request.on('end', async () => {
+            const parsedBody = querystring.parse(body);
+            const { booking_id, status } = parsedBody;
+
+            try {
+                await db.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, booking_id]);
+                response.writeHead(302, { 'Location': '/admin' });
+                response.end();
+            } catch (error) {
+                console.error('Error updating status:', error);
+                response.writeHead(500, { 'Content-Type': 'text/plain' });
+                response.end('Error updating status');
+            }
+        });
+        return;
+    }
+
     // handle API requests
     if (url.startsWith('/api')) {
-        
+
         // --- API: LOGOUT (DIPERBAIKI POSISINYA DISINI) ---
         if (url === '/api/logout' && method === 'POST') {
             // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
@@ -87,188 +110,6 @@ server.on("request", async (request, response) => {
                 console.error('Error fetching bookings:', error);
                 response.writeHead(500, { 'Content-Type': 'application/json' });
                 response.end(JSON.stringify({ message: 'Error mengambil data booking' }));
-            }
-            return;
-        }
-
-        // CREATE booking
-        if (url === '/api/bookings' && method === 'POST') {
-            let body = '';
-
-            request.on('data', chunk => {
-                body += chunk.toString();
-            });
-
-            request.on('end', async () => {
-                try {
-                    // [UBAH] 1. Cek User dari Cookie
-                    const user = getUserFromRequest(request);
-                    if (!user) {
-                        response.writeHead(401, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Silakan login terlebih dahulu' }));
-                        return;
-                    }
-
-                    // [UBAH] 2. Hapus 'userId' dari body, karena kita pakai user.id dari cookie
-                    const { roomId, bookingDate, bookingTime, purpose } = JSON.parse(body);
-
-                    // Validasi input
-                    if (!roomId || !bookingDate || !bookingTime || !purpose) {
-                        response.writeHead(400, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Semua field harus diisi' }));
-                        return;
-                    }
-
-                    // Cek ketersediaan
-                    const checkBooking = await db.query(
-                        `SELECT * FROM bookings 
-                         WHERE room_id = $1 
-                         AND booking_date = $2 
-                         AND booking_time = $3 
-                         AND status IN ('pending', 'approved')`,
-                        [roomId, bookingDate, bookingTime]
-                    );
-
-                    if (checkBooking.rows.length > 0) {
-                        response.writeHead(409, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Ruangan sudah dibooking' }));
-                        return;
-                    }
-
-                    // [UBAH] 3. Insert menggunakan user.id (dari cookie)
-                    const result = await db.query(
-                        `INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
-                         VALUES ($1, $2, $3, $4, $5, $6)
-                         RETURNING *`,
-                        [user.id, roomId, bookingDate, bookingTime, purpose, 'pending'] // <--- Pakai user.id
-                    );
-
-                    response.writeHead(201, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({
-                        message: 'Booking berhasil dibuat',
-                        booking: result.rows[0]
-                    }));
-
-                } catch (error) {
-                    console.error('Error creating booking:', error);
-                    response.writeHead(500, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Error membuat booking' }));
-                }
-            });
-            return;
-        }
-
-        // UPDATE booking status
-        const bookingStatusMatch = url.match(/\/api\/bookings\/(\d+)\/status/);
-        if (bookingStatusMatch && method === 'POST') {
-            const id = bookingStatusMatch[1];
-            let body = '';
-
-            request.on('data', chunk => {
-                body += chunk.toString();
-            });
-
-            request.on('end', async () => {
-                try {
-                    const { status } = JSON.parse(body);
-                    await db.query(
-                        'UPDATE bookings SET status = $1 WHERE id = $2',
-                        [status, id]
-                    );
-
-                    response.writeHead(200, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Status berhasil diupdate' }));
-                } catch (error) {
-                    console.error('Error updating status:', error);
-                    response.writeHead(500, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Error mengupdate status' }));
-                }
-            });
-            return;
-        }
-
-        // GET all users
-        if (url === '/api/users' && method === 'GET') {
-            try {
-                const result = await db.query(
-                    'SELECT id, username, email, role, created_at FROM users ORDER BY id ASC'
-                );
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
-            } catch (error) {
-                console.error('Error fetching users:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data users' }));
-            }
-            return;
-        }
-
-        // GET all rooms
-        if (url === '/api/rooms' && method === 'GET') {
-            try {
-                const result = await db.query(
-                    'SELECT id, name, image_path, capacity FROM rooms ORDER BY id ASC'
-                );
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows));
-            } catch (error) {
-                console.error('Error fetching rooms:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
-            }
-            return;
-        }
-
-        // GET booking availability by room and date
-        if (url.startsWith('/api/bookings/availability/') && method === 'GET') {
-            try {
-                const parts = url.split('/');
-                const roomId = parts[4];
-                const date = parts[5];
-
-                const result = await db.query(
-                    `SELECT booking_time FROM bookings 
-                     WHERE room_id = $1 
-                     AND booking_date = $2 
-                     AND status IN ('pending', 'approved')`,
-                    [roomId, date]
-                );
-
-                const bookedTimes = result.rows.map(row => row.booking_time);
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ bookedTimes }));
-            } catch (error) {
-                console.error('Error checking availability:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error checking availability' }));
-            }
-            return;
-        }
-
-        // GET room by ID
-        if (url.startsWith('/api/rooms/') && !url.includes('user') && method === 'GET') {
-            try {
-                const id = url.split('/')[3];
-                const result = await db.query(
-                    'SELECT id, name, image_path, capacity FROM rooms WHERE id = $1',
-                    [id]
-                );
-
-                if (result.rows.length === 0) {
-                    response.writeHead(404, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Ruangan tidak ditemukan' }));
-                    return;
-                }
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(result.rows[0]));
-            } catch (error) {
-                console.error('Error fetching room:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data ruangan' }));
             }
             return;
         }
@@ -328,7 +169,7 @@ server.on("request", async (request, response) => {
     }
 
     // Handle static files
-    
+
     // 1. Proteksi Halaman Admin
     if (url === '/admin' || url === '/pages/admin_page.html') {
         const user = getUserFromRequest(request);
@@ -338,6 +179,240 @@ server.on("request", async (request, response) => {
             response.end();
             return;
         }
+    }
+
+    //dashboard page
+    if (url === '/dashboard' && method === 'GET') {
+        const user = getUserFromRequest(request);
+        if (!user) {
+            response.writeHead(302, { 'Location': '/login' });
+            response.end();
+            return;
+        }
+
+        try {
+            // Ambil data rooms dari database
+            const roomsResult = await db.query(
+                'SELECT id, name, image_path, capacity FROM rooms ORDER BY id ASC'
+            );
+
+            let roomCards = "";
+
+            if (roomsResult.rows.length === 0) {
+                roomCards = `<p>Belum ada ruangan tersedia.</p>`;
+            } else {
+                roomsResult.rows.forEach(room => {
+                    const imagePath = room.image_path;
+
+                    roomCards += `
+                <div class="room-option-card" data-room-id="${room.id}">
+                    <h3>${room.name}</h3>
+                    <img src="${imagePath}" alt="${room.name}">
+                    <p>Capacity: ${room.capacity} Persons</p>
+                </div>`;
+                });
+            }
+
+            // Baca file dashboard.html
+            const dashboardPath = path.join("./public/pages/dashboard.html");
+            let htmlDashboard = fs.readFileSync(dashboardPath, 'utf8');
+
+            // Replace container dengan konten yang sudah di-render
+            htmlDashboard = htmlDashboard.replace(
+                '<div class="container"></div>',
+                `<div class="container">
+                <div class="dashboardHeader">
+                    <h1>Dashboard</h1>
+                    <button class="bookingButton disabled" id="bookingButton" disabled>Booking</button>
+                </div>
+
+                <div class="dashboardContainer">
+                    <p class="chooseRoomTitle">Choose one of these rooms</p>
+                    <div class="room-options-container">
+                        ${roomCards}
+                    </div>
+                </div>
+            </div>`
+            );
+
+            // Compression dengan gzip
+            response.writeHead(200, {
+                "Content-Type": "text/html",
+                "transfer-encoding": "chunked",
+                "Content-Encoding": "gzip"
+            });
+
+            const gzip = zlib.createGzip();
+            const { Readable } = await import("node:stream");
+            Readable.from([htmlDashboard]).pipe(gzip).pipe(response);
+
+        } catch (err) {
+            response.writeHead(500, { "Content-Type": "text/plain" });
+            response.end("Error rendering dashboard page");
+        }
+        return;
+    }
+
+    //Booking Page
+    if (url.startsWith('/booking') && method === "GET") {
+        const user = getUserFromRequest(request);
+        if (!user || user.role !== "user") {
+            response.writeHead(302, { 'Location': '/login' });
+            response.end();
+            return;
+        }
+
+        //Mengambil room id dari query parameter url
+        try {
+            const query = new URL(request.url, `http://${request.headers.host}`);
+            const roomId = query.searchParams.get("id");
+
+            if (!roomId) {
+                response.writeHead(400, { "Content-Type": "text/plain" });
+                response.end("Room ID is required");
+                return;
+            }
+
+            //Mengambil data ruangan dari database berdasarkan id
+            const roomResult = await db.query(
+                'SELECT id, name, image_path, capacity FROM rooms WHERE id = $1',
+                [roomId]
+            );
+
+            if (roomResult.rows.length === 0) {
+                response.writeHead(404, { "Content-Type": "text/plain" });
+                response.end("Room not found");
+                return;
+            }
+
+            const room = roomResult.rows[0];
+
+            // Ambil tanggal dari query parameter, atau gunakan hari ini sebagai default
+            const selectedDate = query.searchParams.get("date") || new Date().toISOString().split('T')[0];
+
+            const bookingsResult = await db.query(
+                `SELECT booking_time FROM bookings 
+                WHERE room_id = $1 
+                AND booking_date = $2 
+                AND status IN ('pending', 'approved')`,
+                [roomId, selectedDate]
+            );
+
+            const bookedTimes = bookingsResult.rows.map(row => row.booking_time);
+
+            //Mengecek waktu sekarang
+            const now = new Date();
+            const today = new Date().toISOString().split('T')[0];
+            const isToday = selectedDate === today;
+            const currentHour = now.getHours();
+            const currentMinutes = now.getMinutes();
+
+            //Membuat slot jam 
+            const timeSlots = [
+                { value: "08.00 - 11.00", start: 8 },
+                { value: "11.00 - 13.00", start: 11 },
+                { value: "13.00 - 15.00", start: 13 },
+                { value: "15.00 - 18.00", start: 15 }
+            ];
+
+            let optionsHtml = '<option value="">--Select Booking Time--</option>';
+
+            timeSlots.forEach(slot => {
+                const isBooked = bookedTimes.includes(slot.value);
+                // Hanya cek isPastTime jika tanggal yang dipilih adalah hari ini
+                const isPastTime = isToday && (slot.start < currentHour || (slot.start === currentHour && currentMinutes > 0));
+
+                let disabled = '';
+                let label = slot.value;
+
+                if (isBooked) {
+                    disabled = 'disabled';
+                    label = `${slot.value} (Booked)`;
+                } else if (isPastTime) {
+                    disabled = 'disabled';
+                    label = `${slot.value} (Passed)`;
+                }
+                optionsHtml += `<option value="${slot.value}" ${disabled}>${label}</option>`;
+            });
+
+            //Membaca file bookingHTML
+            const bookingPath = path.join("./public/pages/bookingDetail.html");
+            let htmlBooking = fs.readFileSync(bookingPath, 'utf8');
+
+            //Mengganti daftar ruangan pada dashboard html
+            htmlBooking = htmlBooking.replace('<!--ROOM_IMAGE-->', room.image_path);
+            htmlBooking = htmlBooking.replace('<!--ROOM_NAME-->', room.name);
+            htmlBooking = htmlBooking.replace('<!--ROOM_CAPACITY-->', `Capacity: ${room.capacity} Persons`)
+            htmlBooking = htmlBooking.replace('<!--ROOM_ID-->', room.id);
+
+            htmlBooking = htmlBooking.replace(
+                /<select id="duration" name="duration" required>[\s\S]*?<\/select>/,
+                `<select id="duration" name="duration" required>${optionsHtml}</select>`
+            );
+
+            // Compression dengan gzip
+            response.writeHead(200, {
+                "Content-Type": "text/html",
+                "Content-Encoding": "gzip"
+            });
+
+            const gzip = zlib.createGzip();
+            const { Readable } = await import("node:stream");
+            Readable.from([htmlBooking]).pipe(gzip).pipe(response);
+        } catch (err) {
+            response.writeHead(500, { "Content-Type": "text/plain" });
+            response.end("Error rendering booking detail page");
+        }
+        return;
+    }
+
+    // create booking 
+    if (url === "/booking" && method === "POST") {
+        let body = "";
+
+        request.on("data", chunk => body += chunk.toString());
+
+        request.on("end", async () => {
+            const user = getUserFromRequest(request);
+            if (!user || user.role !== "user") {
+                response.writeHead(302, { Location: "/login" });
+                return response.end();
+            }
+
+            const form = new URLSearchParams(body);
+
+            const roomId = form.get("roomId");
+            const bookingDate = form.get("bookingDate");
+            const bookingTime = form.get("duration");
+            const purpose = form.get("purpose");
+
+            // Validasi
+            if (!roomId || !bookingDate || !bookingTime) {
+                response.writeHead(400, { "Content-Type": "text/plain" });
+                return response.end("Incomplete form data.");
+            }
+
+            try {
+                // Insert ke database
+                await db.query(`
+                INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status)
+                VALUES ($1, $2, $3, $4, $5, 'pending')
+            `, [user.id, roomId, bookingDate, bookingTime, purpose]);
+
+                // Redirect ke history page
+                response.writeHead(302, {
+                    "Location": "/history"
+                });
+                response.end();
+
+            } catch (err) {
+                console.error("Error insert booking:", err);
+                response.writeHead(500, { "Content-Type": "text/plain" });
+                response.end("Error saving booking");
+            }
+        });
+
+        return;
     }
 
     //History Page
@@ -372,9 +447,9 @@ server.on("request", async (request, response) => {
                     let statusLabel = item.status;
                     switch (item.status) {
                         case 'confirmed': statusLabel = "Approved"; break;
-                        case 'pending':   statusLabel = "Pending";  break;
-                        case 'rejected':  statusLabel = "Rejected"; break;
-                        case 'canceled':  statusLabel = "Canceled"; break;
+                        case 'pending': statusLabel = "Pending"; break;
+                        case 'rejected': statusLabel = "Rejected"; break;
+                        case 'canceled': statusLabel = "Canceled"; break;
                     }
 
                     const cancel_book = item.status === 'pending' || item.status === 'confirmed';
@@ -404,7 +479,7 @@ server.on("request", async (request, response) => {
 
                             <img class="history-image"
                                 src="${image}"
-                                onerror="this.src='../images/ruang-a/meetingroom-1.jpg'">
+                                onerror="this.src='../images/ruang-a/default-room.webp'">
                         </div>
                     </div>`;
                 });
@@ -415,7 +490,7 @@ server.on("request", async (request, response) => {
 
             //Taro card di html
             html_history = html_history.replace(
-                '<div class="container">', 
+                '<div class="container">',
                 `<div class="container">
                     <div class="header">
                         <h1>Riwayat Booking</h1>
@@ -425,7 +500,7 @@ server.on("request", async (request, response) => {
                     </div>
                 `
             );
-            
+
             //Compression
             response.writeHead(200, {
                 "Content-Type": "text/html",
@@ -446,15 +521,110 @@ server.on("request", async (request, response) => {
         return;
     }
 
-    // 2. Proteksi Halaman Dashboard, History, Booking
-    if (url === '/dashboard' || url === '/booking') {
+    if (url === '/admin' && method === 'GET') {
         const user = getUserFromRequest(request);
-        // Kalau belum login -> Tendang ke Login
-        if (!user) {
+        if (!user || user.role !== 'admin') {
             response.writeHead(302, { 'Location': '/login' });
             response.end();
             return;
         }
+
+        try {
+            const bookingsResult = await db.query(`
+                SELECT 
+                    b.id,
+                    u.username,
+                    r.name AS room_name,
+                    b.booking_date,
+                    b.booking_time,
+                    b.purpose,
+                    b.status
+                FROM bookings b
+                JOIN users u ON b.user_id = u.id
+                JOIN rooms r ON b.room_id = r.id
+                ORDER BY b.id ASC
+            `);
+
+            let tableRows = "";
+            if (bookingsResult.rows.length === 0) {
+                tableRows = `<tr><td colspan="8" style="text-align: center;">No booking requests found.</td></tr>`;
+            } else {
+                bookingsResult.rows.forEach(booking => {
+                    const date = new Date(booking.booking_date).toLocaleDateString('id-ID', {
+                        day: 'numeric', month: 'long', year: 'numeric'
+                    });
+
+                    let statusClass = '';
+                    switch (booking.status) {
+                        case 'pending':
+                            statusClass = 'status-pending';
+                            break;
+                        case 'approved':
+                            statusClass = 'status-approved';
+                            break;
+                        case 'rejected':
+                            statusClass = 'status-rejected';
+                            break;
+                        case 'canceled':
+                            statusClass = 'status-canceled';
+                            break;
+                    }
+
+                    const isPending = booking.status === 'pending';
+                    const isActive = booking.status === 'pending' || booking.status === 'approved';
+
+                    tableRows += `
+                        <tr>
+                            <td>${booking.id}</td>
+                            <td>${booking.username}</td>
+                            <td>${booking.room_name}</td>
+                            <td>${date}</td>
+                            <td>${booking.booking_time}</td>
+                            <td>${booking.purpose}</td>
+                            <td class="status"><span class="${statusClass}">${booking.status}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                        <input type="hidden" name="booking_id" value="${booking.id}">
+                                        <input type="hidden" name="status" value="approved">
+                                        <button type="submit" class="btn btn-approve" ${!isPending ? 'disabled' : ''}>Approve</button>
+                                    </form>
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                        <input type="hidden" name="booking_id" value="${booking.id}">
+                                        <input type="hidden" name="status" value="rejected">
+                                        <button type="submit" class="btn btn-reject" ${!isPending ? 'disabled' : ''}>Reject</button>
+                                    </form>
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                        <input type="hidden" name="booking_id" value="${booking.id}">
+                                        <input type="hidden" name="status" value="canceled">
+                                        <button type="submit" class="btn btn-cancel" ${!isActive ? 'disabled' : ''}>Cancel</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            const adminPagePath = path.join("./public/pages/admin_page.html");
+            let htmlAdmin = fs.readFileSync(adminPagePath, 'utf8');
+
+            htmlAdmin = htmlAdmin.replace('<tbody>', `<tbody>${tableRows}`);
+
+            response.writeHead(200, {
+                "Content-Type": "text/html",
+                "Content-Encoding": "gzip"
+            });
+            const gzip = zlib.createGzip();
+            const { Readable } = await import("node:stream");
+            Readable.from([htmlAdmin]).pipe(gzip).pipe(response);
+
+        } catch (err) {
+            console.error("SSR admin error:", err);
+            response.writeHead(500, { "Content-Type": "text/plain" });
+            response.end("Error rendering admin page");
+        }
+        return;
     }
 
     // --- HANDLE STATIC FILES (Baru dijalankan setelah lolos cek di atas) ---
@@ -463,12 +633,6 @@ server.on("request", async (request, response) => {
 
     if (url === "/" || url === "/login") {
         fileName = "/pages/login.html";
-    } else if (url === "/dashboard") {
-        fileName = "/pages/dashboard.html";
-    } else if (url === "/admin") {
-        fileName = "/pages/admin_page.html";
-    } else if (url === "/history") {
-        fileName = "/pages/history.html";
     } else if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
     } else {
@@ -489,8 +653,6 @@ server.on("request", async (request, response) => {
     };
 
     const contentType = mimeTypes[fileExtension] || "text/plain";
-
-    // console.log("URL dari Browser:", url); // Opsional: matikan log biar ga berisik
 
     fs.readFile(filePath, (err, content) => {
         if (err) {

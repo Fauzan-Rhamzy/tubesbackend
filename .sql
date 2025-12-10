@@ -1,3 +1,7 @@
+DROP TABLE IF EXISTS bookings;
+DROP TABLE IF EXISTS rooms;
+DROP TABLE IF EXISTS users;
+
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(100) NOT NULL,
@@ -21,9 +25,9 @@ CREATE TABLE rooms (
 
 -- insert data ruangan
 INSERT INTO rooms VALUES 
-(1, 'Meeting Room A', '../images/ruang-a/Meeting-Room-GST.webp', 10),
-(2, 'Conference Room B', '../images/ruang-a/194_1510807301.67.lg.png', 25),
-(3, 'Discussion Room C', '../images/ruang-a/meja-miting-kantor-ELSINTA-revisi-copy.jpg', 5);
+(1, 'Meeting Room A', '../images/ruang-a/Meeting-Room-a.webp', 10),
+(2, 'Conference Room B', '../images/ruang-a/conference-room-b.webp', 25),
+(3, 'Discussion Room C', '../images/ruang-a/discussion-room-c.webp', 5);
 
 CREATE TABLE bookings (
     id SERIAL PRIMARY KEY,
@@ -37,3 +41,13 @@ CREATE TABLE bookings (
     FOREIGN KEY (user_id) REFERENCES users(id),
     FOREIGN KEY (room_id) REFERENCES rooms(id)
 );
+
+-- Insert data bookings
+INSERT INTO bookings (user_id, room_id, booking_date, booking_time, purpose, status) VALUES
+(2, 1, '2024-05-20', '09:00-11:00', 'Team Meeting', 'approved'),
+(3, 2, '2024-05-21', '14:00-16:00', 'Client Presentation', 'pending'),
+(2, 3, '2024-05-22', '10:00-12:00', 'Project Discussion', 'approved'),
+(3, 1, '2024-05-23', '11:00-13:00', 'Quarterly Review', 'rejected'),
+(2, 2, '2024-05-24', '09:00-11:00', 'Internal Training', 'pending'),
+(3, 3, '2024-05-25', '14:00-16:00', 'UX/UI Design Review', 'approved'),
+(2, 1, '2024-05-26', '10:00-12:00', 'Sprint Planning', 'pending');

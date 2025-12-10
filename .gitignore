@@ -1,0 +1,17 @@
+# Node.js
+node_modules/
+dist/
+build/
+.env
+
+# npm package manager
+package-lock.json
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Misc
+.sql
