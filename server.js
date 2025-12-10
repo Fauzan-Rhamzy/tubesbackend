@@ -557,17 +557,17 @@ server.on("request", async (request, response) => {
                             <td class="status"><span class="${statusClass}">${booking.status}</span></td>
                             <td>
                                 <div class="action-buttons">
-                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to approve this booking?');">
                                         <input type="hidden" name="booking_id" value="${booking.id}">
                                         <input type="hidden" name="status" value="approved">
                                         <button type="submit" class="btn btn-approve" ${!isPending ? 'disabled' : ''}>Approve</button>
                                     </form>
-                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to reject this booking?');">
                                         <input type="hidden" name="booking_id" value="${booking.id}">
                                         <input type="hidden" name="status" value="rejected">
                                         <button type="submit" class="btn btn-reject" ${!isPending ? 'disabled' : ''}>Reject</button>
                                     </form>
-                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
                                         <input type="hidden" name="booking_id" value="${booking.id}">
                                         <input type="hidden" name="status" value="canceled">
                                         <button type="submit" class="btn btn-cancel" ${!isActive ? 'disabled' : ''}>Cancel</button>
