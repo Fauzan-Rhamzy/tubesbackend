@@ -391,24 +391,10 @@ server.on("request", async (request, response) => {
             } else {
                 booking_room.rows.forEach(item => {
                     let statusLabel = item.status;
-                    switch (item.status) {
-                        case 'approved':
-                            statusLabel = "Approved";
-                            break;
-                        case 'pending':
-                            statusLabel = "Pending";
-                            break;
-                        case 'rejected':
-                            statusLabel = "Rejected";
-                            break;
-                        case 'canceled':
-                            statusLabel = "Canceled";
-                            break;
-                    }
 
                     let cancel_book = false;
 
-                    if (item.status === 'pending' || item.status === 'approved') {
+                    if (statusLabel === 'pending' || statusLabel === 'approved') {
                         cancel_book = true;
                     }
 
@@ -487,6 +473,8 @@ server.on("request", async (request, response) => {
 
         request.on("data", chunk => body += chunk.toString());
         request.on("end", async () => {
+            const user = getUserFromRequest(request);
+
             const form = new URLSearchParams(body); //body request
             const bookingId = form.get("booking_id");
 
