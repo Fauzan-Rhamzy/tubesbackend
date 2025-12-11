@@ -174,8 +174,6 @@ server.on("request", async (request, response) => {
             const dashboardPath = path.join("./public/pages/dashboard.html");
             let htmlDashboard = fs.readFileSync(dashboardPath, 'utf8');
 
-
-            // Replace username header
             htmlDashboard = htmlDashboard.replace(
                 '<span id="usernameDisplay">Hi, User!</span>',
                 `<span id="usernameDisplay">Hi, ${user.username}!</span>`
@@ -295,7 +293,6 @@ server.on("request", async (request, response) => {
             const bookingPath = path.join("./public/pages/bookingDetail.html");
             let htmlBooking = fs.readFileSync(bookingPath, 'utf8');
 
-            // Replace username header
             htmlBooking = htmlBooking.replace(
                 '<span id="usernameDisplay">Hi, User!</span>',
                 `<span id="usernameDisplay">Hi, ${user.username}!</span>`
@@ -641,6 +638,11 @@ server.on("request", async (request, response) => {
             //baca admin_page.html
             const adminPagePath = path.join("./public/pages/admin_page.html");
             let htmlAdmin = fs.readFileSync(adminPagePath, 'utf8');
+
+            htmlAdmin = htmlAdmin.replace(
+                '<span id="usernameDisplay">Hi, User!</span>',
+                `<span id="usernameDisplay">Hi, ${user.username}!</span>`
+            );
 
             //meng-inject pada <tbody>(dicari) dengan tabel yang sudah diisi
             htmlAdmin = htmlAdmin.replace('<tbody>', `<tbody>${tableRows}`);
