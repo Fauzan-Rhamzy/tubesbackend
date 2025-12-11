@@ -430,7 +430,10 @@ server.on("request", async (request, response) => {
 
                                 <div class="cancel">
                                     ${cancel_book ? `
-                                        <button class="btn-cancel-booking" onclick="cancelBooking(${item.id})">Cancel Booking</button>
+                                        <form action="/history/cancel" method="POST" onsubmit="return confirm('Are you sure?');">
+                                            <input type="hidden" name="booking_id" value="${item.id}">
+                                            <button type="submit" class="btn-cancel-booking">Cancel Booking</button>
+                                        </form>
                                     ` : ""}
                                 </div>
                             </div>
@@ -479,35 +482,32 @@ server.on("request", async (request, response) => {
         return;
     }
 
-    // UPDATE booking status di page history
-    const bookingStatusMatch = url.match(/\/api\/bookings\/(\d+)\/status/);
-    if (bookingStatusMatch && method === 'POST') {
-        const id = bookingStatusMatch[1];
-        let body = '';
+    if (url === "/history/cancel" && method === "POST") {
+        let body = "";
 
-        request.on('data', chunk => {
-            body += chunk.toString();
-        });
+        request.on("data", chunk => body += chunk.toString());
+        request.on("end", async () => {
+            const form = new URLSearchParams(body); //body request
+            const bookingId = form.get("booking_id");
 
-        request.on('end', async () => {
             try {
-                const { status } = JSON.parse(body);
                 await db.query(
-                    'UPDATE bookings SET status = $1 WHERE id = $2',
-                    [status, id]
+                    "UPDATE bookings SET status = 'canceled' WHERE id = $1 AND user_id = $2",
+                    [bookingId, user.id]
                 );
 
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Status berhasil diupdate' }));
-            } catch (error) {
-                console.error('Error updating status:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengupdate status' }));
+                response.writeHead(302, { Location: "/history" });
+                response.end();
+
+            } catch (err) {
+                console.error("Cancel error:", err);
+                response.writeHead(500, { "Content-Type": "text/plain" });
+                response.end("Cancel failed");
             }
         });
+
         return;
     }
-
 
     //update booking status di page admin
     if (url === '/admin/booking/update' && method === 'POST') {
