@@ -34,8 +34,7 @@ server.on("request", async (request, response) => {
     const url = request.url;
 
     // handle API requests
-
-        // --- API: LOGOUT (DIPERBAIKI POSISINYA DISINI) ---
+        // api logout
         if (url === '/api/logout' && method === 'GET') {
             // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
             console.log("LOGOUT");
@@ -46,8 +45,6 @@ server.on("request", async (request, response) => {
             response.end();
             return;
         }
-
-
 
         // LOGIN API
         if (url === '/api/login' && method === 'POST') {
@@ -653,7 +650,7 @@ server.on("request", async (request, response) => {
         return;
     }
 
-    // --- HANDLE STATIC FILES (Baru dijalankan setelah lolos cek di atas) ---
+    // Handle static files (Baru dijalankan setelah lolos cek" di atas) 
     let folder = "./public";
     let fileName = url;
 
@@ -687,7 +684,7 @@ server.on("request", async (request, response) => {
             response.end(content);
         }
     });
-}); // <--- Tutup server.on request
+}); // tutup server.on request
 
 server.listen(PORT, () => {
     console.log(`Server is listening on http://localhost:${PORT}`);
