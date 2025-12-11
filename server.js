@@ -135,19 +135,6 @@ server.on("request", async (request, response) => {
         return;
     }
 
-    // Handle static files
-
-    // 1. Proteksi Halaman Admin
-    if (url === '/admin' || url === '/pages/admin_page.html') {
-        const user = getUserFromRequest(request);
-        // Kalau belum login ATAU bukan admin -> Tendang ke Login
-        if (!user || user.role !== 'admin') {
-            response.writeHead(302, { 'Location': '/login' });
-            response.end();
-            return;
-        }
-    }
-
     //dashboard page
     if (url === '/dashboard' && method === 'GET') {
         const user = getUserFromRequest(request);
