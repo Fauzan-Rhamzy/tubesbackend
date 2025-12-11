@@ -174,6 +174,13 @@ server.on("request", async (request, response) => {
             const dashboardPath = path.join("./public/pages/dashboard.html");
             let htmlDashboard = fs.readFileSync(dashboardPath, 'utf8');
 
+
+            // Replace username header
+            htmlDashboard = htmlDashboard.replace(
+                '<span id="usernameDisplay">Hi, User!</span>',
+                `<span id="usernameDisplay">Hi, ${user.username}!</span>`
+            );
+
             // Replace container dengan konten yang sudah di-render
             htmlDashboard = htmlDashboard.replace(
                 '<div class="container"></div>',
@@ -287,6 +294,12 @@ server.on("request", async (request, response) => {
             //Membaca file bookingHTML
             const bookingPath = path.join("./public/pages/bookingDetail.html");
             let htmlBooking = fs.readFileSync(bookingPath, 'utf8');
+
+            // Replace username header
+            htmlBooking = htmlBooking.replace(
+                '<span id="usernameDisplay">Hi, User!</span>',
+                `<span id="usernameDisplay">Hi, ${user.username}!</span>`
+            );
 
             //Mengganti daftar ruangan pada dashboard html
             htmlBooking = htmlBooking.replace('<!--ROOM_IMAGE-->', room.image_path);
@@ -438,6 +451,12 @@ server.on("request", async (request, response) => {
 
             //baca history.html
             let html_history = fs.readFileSync("./public/pages/history.html", 'utf8');
+
+            // Replace username header
+            html_history = html_history.replace(
+                '<span id="usernameDisplay">Hi, User!</span>',
+                `<span id="usernameDisplay">Hi, ${user.username}!</span>`
+            );
 
             //Taro card di html
             html_history = html_history.replace(
@@ -672,7 +691,7 @@ server.on("request", async (request, response) => {
             response.end(content);
         }
     });
-}); 
+});
 
 server.listen(PORT, () => {
     console.log(`Server is listening on http://localhost:${PORT}`);
