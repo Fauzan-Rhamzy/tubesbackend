@@ -21,7 +21,6 @@ document.getElementById("loginForm").addEventListener("submit", async function (
 
         // cek respon server
         if (response.ok) {
-            localStorage.setItem("username", data.username || "User"); //Local storage untuk username
             
             // redirect halaman sesuai role
             if (data.role === 'admin') {

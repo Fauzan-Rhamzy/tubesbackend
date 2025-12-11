@@ -11,14 +11,19 @@ const server = new http.Server();
 
 const SECRET_KEY = "rahasia";
 
+// method ambil objek 'user' dari cookie
 function getUserFromRequest(request) {
+    // ngambil cookie
     const cookieHeader = request.headers.cookie;
     if (!cookieHeader) return null;
 
+    // ngambil token
     const tokenCookie = cookieHeader.split(';').find(c => c.trim().startsWith('token='));
     if (!tokenCookie) return null;
 
+    // ambil value dari token
     const token = tokenCookie.split('=')[1];
+    // dekripsi
     try {
         const decoded = jwt.verify(token, SECRET_KEY);
         return decoded;
@@ -28,6 +33,7 @@ function getUserFromRequest(request) {
 }
 
 server.on("request", async (request, response) => {
+    // terima request
     console.log(`Request received: ${request.method} ${request.url}`);
 
     const method = request.method;
@@ -36,7 +42,7 @@ server.on("request", async (request, response) => {
     // handle API requests
     // api logout
     if (url === '/api/logout' && method === 'GET') {
-        // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
+        // handle logout, hapus cookie token nya
         console.log("LOGOUT");
         response.writeHead(302, {
             'Location': '/login',
@@ -46,7 +52,7 @@ server.on("request", async (request, response) => {
         return;
     }
 
-    // LOGIN API
+    // handle login
     if (url === '/api/login' && method === 'POST') {
         let body = '';
 
@@ -639,7 +645,7 @@ server.on("request", async (request, response) => {
         return;
     }
 
-    // Handle static files (Baru dijalankan setelah lolos cek" di atas) 
+    // Handle static files
     let folder = "./public";
     let fileName = url;
 
@@ -673,7 +679,7 @@ server.on("request", async (request, response) => {
             response.end(content);
         }
     });
-}); // tutup server.on request
+}); 
 
 server.listen(PORT, () => {
     console.log(`Server is listening on http://localhost:${PORT}`);
