@@ -1,5 +1,13 @@
 {
+  "name": "tubesbackend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "start": "concurrently \"node server.js\" \"node proxy.js\""
+  },
   "dependencies": {
+    "concurrently": "^8.2.2",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.16.3"
   }

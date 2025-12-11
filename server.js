@@ -2,34 +2,25 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import db from "./db.js";
-import jwt from 'jsonwebtoken';
+import crypto from "node:crypto";
 import zlib from "node:zlib";
 import querystring from 'node:querystring';
 
 const PORT = 3000;
 const server = new http.Server();
 
-const SECRET_KEY = "rahasia";
+const sessions = new Map();
 
 // method ambil objek 'user' dari cookie
 function getUserFromRequest(request) {
-    // ngambil cookie
     const cookieHeader = request.headers.cookie;
     if (!cookieHeader) return null;
 
-    // ngambil token
-    const tokenCookie = cookieHeader.split(';').find(c => c.trim().startsWith('token='));
-    if (!tokenCookie) return null;
+    const sessionIdCookie = cookieHeader.split(';').find(c => c.trim().startsWith('sessionId='));
+    if (!sessionIdCookie) return null;
 
-    // ambil value dari token
-    const token = tokenCookie.split('=')[1];
-    // dekripsi
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        return decoded;
-    } catch (err) {
-        return null;
-    }
+    const sessionId = sessionIdCookie.split('=')[1];
+    return sessions.get(sessionId);
 }
 
 server.on("request", async (request, response) => {
@@ -44,9 +35,17 @@ server.on("request", async (request, response) => {
     if (url === '/api/logout' && method === 'GET') {
         // handle logout, hapus cookie token nya
         console.log("LOGOUT");
+        const user = getUserFromRequest(request);
+        if (user) {
+            const cookieHeader = request.headers.cookie;
+            const sessionIdCookie = cookieHeader.split(';').find(c => c.trim().startsWith('sessionId='));
+            const sessionId = sessionIdCookie.split('=')[1];
+            sessions.delete(sessionId);
+        }
+
         response.writeHead(302, {
             'Location': '/login',
-            'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0'
+            'Set-Cookie': 'sessionId=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'
         });
         response.end();
         return;
@@ -81,15 +80,12 @@ server.on("request", async (request, response) => {
                     return;
                 }
 
-                const token = jwt.sign(
-                    { id: user.id, username: user.username, role: user.role },
-                    SECRET_KEY,
-                    { expiresIn: '1h' }
-                );
+                const sessionId = crypto.randomBytes(32).toString("hex");
+                sessions.set(sessionId, { id: user.id, username: user.username, role: user.role });
 
                 response.writeHead(200, {
                     'Content-Type': 'application/json',
-                    'Set-Cookie': `token=${token}; HttpOnly; Path=/; Max-Age=3600`
+                    'Set-Cookie': `sessionId=${sessionId}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600`
                 });
 
                 response.end(JSON.stringify({
