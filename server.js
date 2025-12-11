@@ -645,7 +645,7 @@ server.on("request", async (request, response) => {
         return;
     }
 
-    // Handle static files
+    // handle static files
     let folder = "./public";
     let fileName = url;
 
@@ -653,7 +653,6 @@ server.on("request", async (request, response) => {
     const fileExtension = path.extname(filePath);
 
     const mimeTypes = {
-        ".html": "text/html",
         ".css": "text/css",
         ".js": "application/javascript",
         ".png": "image/png",
