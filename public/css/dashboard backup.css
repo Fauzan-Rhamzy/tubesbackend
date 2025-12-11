@@ -1,4 +1,5 @@
-.bookingButton.disabled {
+.bookingButton.disabled{background-color:#ccc;color:#fff}.bookingButton:hover:not(:disabled){background-color:#2d8c3a;opacity:.9}.chooseRoomTitle{text-align:center;margin-bottom:30px;font-size:22px;font-weight:700;color:#333}.dashboardContainer{margin-top:1rem}.dashboardHeader{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.bookingButton{background-color:#3bb54a;color:#fff;padding:14px 26px;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;transition:0.2s;text-decoration:none}.dateContainer{display:flex;align-items:center;justify-content:end;padding:20px 0}.dateContainer .form-group{display:flex;align-items:center;margin-bottom:0!important}.room-options-container{display:flex;justify-content:space-around;margin-bottom:0}.room-option-card{flex:1;padding:20px;border-radius:10px;border-bottom:0;text-align:center;cursor:pointer;transition:all 0.2s ease-in-out}.room-option-card h3{margin-top:0;color:#333}.room-option-card img{margin-top:1rem;height:150px;width:100%;object-fit:cover}.room-options-container>.active{background:#eef2f7;border-bottom:0;border:1px solid #24a0ed}
+/* .bookingButton.disabled {
     background-color: #ccc;
     color: white;
 }
@@ -85,4 +86,4 @@
     background: #eef2f7;
     border-bottom: 0;
     border: 1px solid #24a0ed;
-}
+} */

@@ -34,16 +34,16 @@ server.on("request", async (request, response) => {
     const url = request.url;
 
     // handle API requests
-    if (url.startsWith('/api')) {
 
         // --- API: LOGOUT (DIPERBAIKI POSISINYA DISINI) ---
-        if (url === '/api/logout' && method === 'POST') {
+        if (url === '/api/logout' && method === 'GET') {
             // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
-            response.writeHead(200, {
-                'Content-Type': 'application/json',
+            console.log("LOGOUT");
+            response.writeHead(302, {
+                'Location': '/login',
                 'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0'
             });
-            response.end(JSON.stringify({ message: 'Logout berhasil' }));
+            response.end();
             return;
         }
 
@@ -101,19 +101,38 @@ server.on("request", async (request, response) => {
             });
             return;
         }
-    }
-
-    // Handle static files
-
-    // 1. Proteksi Halaman Admin
-    if (url === '/admin' || url === '/pages/admin_page.html') {
+    
+    
+    if ((url === '/' || url === '/login') && method === "GET") {
         const user = getUserFromRequest(request);
-        // Kalau belum login ATAU bukan admin -> Tendang ke Login
-        if (!user || user.role !== 'admin') {
-            response.writeHead(302, { 'Location': '/login' });
+        if (user) {
+            if (user.role === 'admin') {
+                response.writeHead(302, {
+                    'Location': '/admin'
+                })
+            } else {
+                response.writeHead(302, {
+                    'Location': '/dashboard'
+                })
+            }
             response.end();
             return;
         }
+
+        const filePath = "./public/pages/login.html";
+
+        // compression
+        response.writeHead(200, {
+            "Content-Type": "text/html",
+            "Content-Encoding": "gzip"
+        });
+
+        const gzip = zlib.createGzip();
+
+        // stream
+        const content = fs.createReadStream(filePath);
+        content.pipe(gzip).pipe(response);
+        return;
     }
 
     //dashboard page
@@ -638,9 +657,7 @@ server.on("request", async (request, response) => {
     let folder = "./public";
     let fileName = url;
 
-    if (url === "/" || url === "/login") {
-        fileName = "/pages/login.html";
-    } else if (url === "/booking") {
+    if (url === "/booking") {
         fileName = "/pages/bookingDetail.html";
     } else {
         fileName = url;
