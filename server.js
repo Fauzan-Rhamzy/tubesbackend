@@ -34,72 +34,72 @@ server.on("request", async (request, response) => {
     const url = request.url;
 
     // handle API requests
-        // api logout
-        if (url === '/api/logout' && method === 'GET') {
-            // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
-            console.log("LOGOUT");
-            response.writeHead(302, {
-                'Location': '/login',
-                'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0'
-            });
-            response.end();
-            return;
-        }
+    // api logout
+    if (url === '/api/logout' && method === 'GET') {
+        // Kita timpa cookie 'token' dengan tanggal kadaluarsa masa lalu
+        console.log("LOGOUT");
+        response.writeHead(302, {
+            'Location': '/login',
+            'Set-Cookie': 'token=; HttpOnly; Path=/; Max-Age=0'
+        });
+        response.end();
+        return;
+    }
 
-        // LOGIN API
-        if (url === '/api/login' && method === 'POST') {
-            let body = '';
+    // LOGIN API
+    if (url === '/api/login' && method === 'POST') {
+        let body = '';
 
-            request.on('data', chunk => {
-                body += chunk.toString();
-            });
+        request.on('data', chunk => {
+            body += chunk.toString();
+        });
 
-            request.on('end', async () => {
-                try {
-                    const { email, password } = JSON.parse(body);
-                    const result = await db.query(
-                        'SELECT * FROM users WHERE email = $1',
-                        [email]
-                    );
+        request.on('end', async () => {
+            try {
+                const { email, password } = JSON.parse(body);
+                const result = await db.query(
+                    'SELECT * FROM users WHERE email = $1',
+                    [email]
+                );
 
-                    if (result.rows.length === 0) {
-                        response.writeHead(401, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Email tidak ditemukan' }));
-                        return;
-                    }
-
-                    const user = result.rows[0];
-                    if (user.password !== password) {
-                        response.writeHead(401, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({ message: 'Password salah' }));
-                        return;
-                    }
-
-                    const token = jwt.sign(
-                        { id: user.id, username: user.username, role: user.role },
-                        SECRET_KEY,
-                        { expiresIn: '1h' }
-                    );
-
-                    response.writeHead(200, {
-                        'Content-Type': 'application/json',
-                        'Set-Cookie': `token=${token}; HttpOnly; Path=/; Max-Age=3600`
-                    });
-
-                    response.end(JSON.stringify({
-                        message: 'Login berhasil',
-                        role: user.role
-                    }));
-                } catch (error) {
-                    console.error('Login error:', error);
-                    response.writeHead(500, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({ message: 'Error server' }));
+                if (result.rows.length === 0) {
+                    response.writeHead(401, { 'Content-Type': 'application/json' });
+                    response.end(JSON.stringify({ message: 'Email tidak ditemukan' }));
+                    return;
                 }
-            });
-            return;
-        }
-    
-    
+
+                const user = result.rows[0];
+                if (user.password !== password) {
+                    response.writeHead(401, { 'Content-Type': 'application/json' });
+                    response.end(JSON.stringify({ message: 'Password salah' }));
+                    return;
+                }
+
+                const token = jwt.sign(
+                    { id: user.id, username: user.username, role: user.role },
+                    SECRET_KEY,
+                    { expiresIn: '1h' }
+                );
+
+                response.writeHead(200, {
+                    'Content-Type': 'application/json',
+                    'Set-Cookie': `token=${token}; HttpOnly; Path=/; Max-Age=3600`
+                });
+
+                response.end(JSON.stringify({
+                    message: 'Login berhasil',
+                    role: user.role
+                }));
+            } catch (error) {
+                console.error('Login error:', error);
+                response.writeHead(500, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ message: 'Error server' }));
+            }
+        });
+        return;
+    }
+
+
     if ((url === '/' || url === '/login') && method === "GET") {
         const user = getUserFromRequest(request);
         if (user) {
@@ -296,6 +296,7 @@ server.on("request", async (request, response) => {
             // Compression dengan gzip
             response.writeHead(200, {
                 "Content-Type": "text/html",
+                "transfer-encoding": "chunked",
                 "Content-Encoding": "gzip"
             });
 
@@ -448,7 +449,7 @@ server.on("request", async (request, response) => {
             //Compression
             response.writeHead(200, {
                 "Content-Type": "text/html",
-                "transfer-encoding": "chunked",
+                "Transfer-Encoding": "chunked",
                 "Content-Encoding": "gzip",
             });
 
