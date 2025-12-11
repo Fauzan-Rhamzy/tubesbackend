@@ -1,1 +1,0 @@
-function cancelBooking(id){fetch("/api/bookings/"+id+"/status",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({status:"canceled"})}).then(res=>res.json()).then(data=>{alert(data.message||"Request berhasil");location.reload()}).catch(()=>alert("Cancel Failed"))}
