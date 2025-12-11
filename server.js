@@ -32,29 +32,6 @@ server.on("request", async (request, response) => {
 
     const method = request.method;
     const url = request.url;
-    const extension = path.extname(request.url);
-
-    if (url === '/admin/booking/update' && method === 'POST') {
-        let body = '';
-        request.on('data', chunk => {
-            body += chunk.toString();
-        });
-        request.on('end', async () => {
-            const parsedBody = querystring.parse(body);
-            const { booking_id, status } = parsedBody;
-
-            try {
-                await db.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, booking_id]);
-                response.writeHead(302, { 'Location': '/admin' });
-                response.end();
-            } catch (error) {
-                console.error('Error updating status:', error);
-                response.writeHead(500, { 'Content-Type': 'text/plain' });
-                response.end('Error updating status');
-            }
-        });
-        return;
-    }
 
     // handle API requests
     if (url.startsWith('/api')) {
@@ -70,49 +47,7 @@ server.on("request", async (request, response) => {
             return;
         }
 
-        // GET all bookings
-        if (url === '/api/bookings' && method === 'GET') {
-            try {
-                // Mengambil semua bookings
-                const bookingsResult = await db.query(
-                    'SELECT * FROM bookings ORDER BY id ASC'
-                );
 
-                // Mengambil semua rooms dan users
-                const roomsResult = await db.query('SELECT * FROM rooms');
-                const usersResult = await db.query('SELECT id, username FROM users');
-
-                const roomsMap = {};
-                roomsResult.rows.forEach(room => {
-                    roomsMap[room.id] = room;
-                });
-
-                const usersMap = {};
-                usersResult.rows.forEach(user => {
-                    usersMap[user.id] = user;
-                });
-
-                // Menggabungkan data
-                const bookings = bookingsResult.rows.map(booking => {
-                    const room = roomsMap[booking.room_id] || {};
-                    const user = usersMap[booking.user_id] || {};
-                    return {
-                        ...booking,
-                        room_name: room.name,
-                        image_path: room.image_path,
-                        username: user.username
-                    };
-                });
-
-                response.writeHead(200, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify(bookings));
-            } catch (error) {
-                console.error('Error fetching bookings:', error);
-                response.writeHead(500, { 'Content-Type': 'application/json' });
-                response.end(JSON.stringify({ message: 'Error mengambil data booking' }));
-            }
-            return;
-        }
 
         // LOGIN API
         if (url === '/api/login' && method === 'POST') {
@@ -438,17 +373,17 @@ server.on("request", async (request, response) => {
                 booking_room.rows.forEach(item => {
                     let statusLabel = item.status;
                     switch (item.status) {
-                        case 'approved': 
-                            statusLabel = "Approved"; 
+                        case 'approved':
+                            statusLabel = "Approved";
                             break;
-                        case 'pending': 
-                            statusLabel = "Pending"; 
+                        case 'pending':
+                            statusLabel = "Pending";
                             break;
-                        case 'rejected': 
-                            statusLabel = "Rejected"; 
+                        case 'rejected':
+                            statusLabel = "Rejected";
                             break;
-                        case 'canceled': 
-                            statusLabel = "Canceled"; 
+                        case 'canceled':
+                            statusLabel = "Canceled";
                             break;
                     }
 
@@ -525,6 +460,63 @@ server.on("request", async (request, response) => {
         return;
     }
 
+    // UPDATE booking status di page history
+    const bookingStatusMatch = url.match(/\/api\/bookings\/(\d+)\/status/);
+    if (bookingStatusMatch && method === 'POST') {
+        const id = bookingStatusMatch[1];
+        let body = '';
+
+        request.on('data', chunk => {
+            body += chunk.toString();
+        });
+
+        request.on('end', async () => {
+            try {
+                const { status } = JSON.parse(body);
+                await db.query(
+                    'UPDATE bookings SET status = $1 WHERE id = $2',
+                    [status, id]
+                );
+
+                response.writeHead(200, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ message: 'Status berhasil diupdate' }));
+            } catch (error) {
+                console.error('Error updating status:', error);
+                response.writeHead(500, { 'Content-Type': 'application/json' });
+                response.end(JSON.stringify({ message: 'Error mengupdate status' }));
+            }
+        });
+        return;
+    }
+
+
+    //update booking status di page admin
+    if (url === '/admin/booking/update' && method === 'POST') {
+        let body = '';
+        //menerima data form dalam chunk
+        request.on('data', chunk => {
+            body += chunk.toString();
+        });
+        request.on('end', async () => {
+            //parse dari url encoded menjadi objek js 
+            const parsedBody = querystring.parse(body);
+            const { booking_id, status } = parsedBody;
+
+            try {
+                //perintah sql update si booking status dan minta redirect ke page admin biar refresh
+                await db.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, booking_id]);
+                response.writeHead(302, { 'Location': '/admin' });
+                response.end();
+            } catch (error) {
+                console.error('Error updating status:', error);
+                response.writeHead(500, { 'Content-Type': 'text/plain' });
+                response.end('Error updating status');
+            }
+        });
+        return;
+    }
+
+    //page admin
     if (url === '/admin' && method === 'GET') {
         const user = getUserFromRequest(request);
         if (!user || user.role !== 'admin') {
@@ -534,6 +526,7 @@ server.on("request", async (request, response) => {
         }
 
         try {
+            //ambil dari db booking result nya di join sama user dan room
             const bookingsResult = await db.query(`
                 SELECT 
                     b.id,
@@ -549,15 +542,18 @@ server.on("request", async (request, response) => {
                 ORDER BY b.id ASC
             `);
 
+            //inisiasi tabel kosong dan diisi 
             let tableRows = "";
             if (bookingsResult.rows.length === 0) {
                 tableRows = `<tr><td colspan="8" style="text-align: center;">No booking requests found.</td></tr>`;
             } else {
                 bookingsResult.rows.forEach(booking => {
+                    //convert date/string ke objek js date 
                     const date = new Date(booking.booking_date).toLocaleDateString('id-ID', {
                         day: 'numeric', month: 'long', year: 'numeric'
                     });
 
+                    //ngecek status terus masukin ke variabel
                     let statusClass = '';
                     switch (booking.status) {
                         case 'pending':
@@ -574,9 +570,11 @@ server.on("request", async (request, response) => {
                             break;
                     }
 
+                    //variabel boolean
                     const isPending = booking.status === 'pending';
                     const isActive = booking.status === 'pending' || booking.status === 'approved';
 
+                    //tabel tadi diisi dengan data yang udh diambil dari db
                     tableRows += `
                         <tr>
                             <td>${booking.id}</td>
@@ -588,17 +586,17 @@ server.on("request", async (request, response) => {
                             <td class="status"><span class="${statusClass}">${booking.status}</span></td>
                             <td>
                                 <div class="action-buttons">
-                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to approve this booking?');">
                                         <input type="hidden" name="booking_id" value="${booking.id}">
                                         <input type="hidden" name="status" value="approved">
                                         <button type="submit" class="btn btn-approve" ${!isPending ? 'disabled' : ''}>Approve</button>
                                     </form>
-                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to reject this booking?');">
                                         <input type="hidden" name="booking_id" value="${booking.id}">
                                         <input type="hidden" name="status" value="rejected">
                                         <button type="submit" class="btn btn-reject" ${!isPending ? 'disabled' : ''}>Reject</button>
                                     </form>
-                                    <form action="/admin/booking/update" method="POST" style="display: inline;">
+                                    <form action="/admin/booking/update" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
                                         <input type="hidden" name="booking_id" value="${booking.id}">
                                         <input type="hidden" name="status" value="canceled">
                                         <button type="submit" class="btn btn-cancel" ${!isActive ? 'disabled' : ''}>Cancel</button>
@@ -610,16 +608,21 @@ server.on("request", async (request, response) => {
                 });
             }
 
+            //baca admin_page.html
             const adminPagePath = path.join("./public/pages/admin_page.html");
             let htmlAdmin = fs.readFileSync(adminPagePath, 'utf8');
 
+            //meng-inject pada <tbody>(dicari) dengan tabel yang sudah diisi
             htmlAdmin = htmlAdmin.replace('<tbody>', `<tbody>${tableRows}`);
 
+            //kompresi
             response.writeHead(200, {
                 "Content-Type": "text/html",
+                "Transfer-Encoding": "chunked",
                 "Content-Encoding": "gzip"
             });
             const gzip = zlib.createGzip();
+            //kirim dalam stream chunk
             const { Readable } = await import("node:stream");
             Readable.from([htmlAdmin]).pipe(gzip).pipe(response);
 
