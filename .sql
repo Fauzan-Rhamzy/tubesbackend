@@ -13,6 +13,7 @@ CREATE TABLE users (
 -- Insert data users
 INSERT INTO users (username, email, password, role) VALUES
 ('Admin', 'admin@gmail.com', 'admin123', 'admin'),
+('Jagung', 'admin1@gmail.com', 'admin123', 'admin'),
 ('John Doe', 'johndoe@gmail.com', 'johndoe123', 'user'),
 ('Alice', 'alice@gmail.com', 'alice123', 'user');
 
