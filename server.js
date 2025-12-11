@@ -649,12 +649,6 @@ server.on("request", async (request, response) => {
     let folder = "./public";
     let fileName = url;
 
-    if (url === "/booking") {
-        fileName = "/pages/bookingDetail.html";
-    } else {
-        fileName = url;
-    }
-
     const filePath = path.join(folder, fileName);
     const fileExtension = path.extname(filePath);
 
