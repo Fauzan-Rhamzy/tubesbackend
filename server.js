@@ -125,7 +125,8 @@ server.on("request", async (request, response) => {
         // compression
         response.writeHead(200, {
             "Content-Type": "text/html",
-            "Content-Encoding": "gzip"
+            "Content-Encoding": "gzip",
+            "transfer-encoding": "chunked"
         });
 
         const gzip = zlib.createGzip();
