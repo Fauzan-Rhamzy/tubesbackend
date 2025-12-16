@@ -5,6 +5,7 @@ import db from "./db.js";
 import crypto from "node:crypto";
 import zlib from "node:zlib";
 import querystring from 'node:querystring';
+import bcrypt from "bcrypt";
 
 const PORT = 3000;
 const server = new http.Server();
@@ -72,9 +73,10 @@ server.on("request", async (request, response) => {
                     response.end(JSON.stringify({ message: 'Email tidak ditemukan' }));
                     return;
                 }
-
+                
                 const user = result.rows[0];
-                if (user.password !== password) {
+                const validatePassword  = await bcrypt.compare(password, user.password);
+                if (!validatePassword) {
                     response.writeHead(401, { 'Content-Type': 'application/json' });
                     response.end(JSON.stringify({ message: 'Password salah' }));
                     return;
