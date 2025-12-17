@@ -137,7 +137,7 @@ server.on("request", async (request, response) => {
     //dashboard page
     if (url === '/dashboard' && method === 'GET') {
         const user = getUserFromRequest(request);
-        if (!user) {
+        if (!user || user.role !== "user") {
             response.writeHead(302, { 'Location': '/login' });
             response.end();
             return;
