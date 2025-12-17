@@ -1,4 +1,4 @@
-import https from 'https:';
+import https from 'https';
 import http from 'http';
 import fs from 'fs';
 import path from 'path';

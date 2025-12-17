@@ -14,14 +14,10 @@ CREATE TABLE users (
 
 -- Insert data users
 INSERT INTO users (username, email, password, role) VALUES
-('Admin', 'admin@gmail.com', crypt('admin123', gen_salt('bf', 10)), , 'admin'),
-('Jagung', 'admin1@gmail.com', crypt('admin123', gen_salt('bf', 10)), , 'admin'),
-('John Doe', 'johndoe@gmail.com', crypt('johndoe123', gen_salt('bf', 10)), , 'user'),
-('Alice', 'alice@gmail.com', crypt('alice123', gen_salt('bf', 10)), , 'user');
-
-UPDATE users 
-SET password = crypt(password, gen_salt('bf', 10)) 
-WHERE password NOT LIKE '$2%'
+('Admin', 'admin@gmail.com', crypt('admin123', gen_salt('bf', 10)), 'admin'),
+('Jagung', 'admin1@gmail.com', crypt('admin123', gen_salt('bf', 10)), 'admin'),
+('John Doe', 'johndoe@gmail.com', crypt('johndoe123', gen_salt('bf', 10)), 'user'),
+('Alice', 'alice@gmail.com', crypt('alice123', gen_salt('bf', 10)), 'user');
 
 CREATE TABLE rooms (
     id SERIAL PRIMARY KEY,
